@@ -1,0 +1,1739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EuroQuest 🗺️ — European Geography Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#d4a017;--gold2:#f0c040;
+  --grass3:#3a7820;--grass:#5aac3a;--grass2:#80c860;
+  --done:#5aac5a;
+  --parch:#f5e6c3;--paper:#fffdf5;
+  --brn:#3a1f05;--brnm:#7a4e2a;--brnl:#a87050;
+  --ok:#27ae60;--err:#e74c3c;
+  --W:430px
+}
+html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background:#1a0a02;color:var(--brn)}
+
+/* ── HEADER ── */
+#hdr{
+  background:linear-gradient(90deg,#100600,#361604 50%,#100600);
+  border-bottom:2.5px solid var(--gold);padding:5px 18px;
+  display:flex;align-items:center;gap:12px;height:50px;
+  box-shadow:0 3px 14px rgba(0,0,0,.55);position:relative;z-index:10;
+}
+#hdr h1{font-family:'Playfair Display',serif;color:var(--gold2);font-size:1.6rem;font-weight:900;letter-spacing:2px;line-height:1}
+.hsub{font-size:.63rem;color:var(--brnl);letter-spacing:1.5px;text-transform:uppercase}
+.hsp{flex:1}
+.hstat{text-align:center}
+.hval{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--gold2);line-height:1}
+.hlbl{font-size:.56rem;color:var(--brnl);text-transform:uppercase;letter-spacing:1.5px}
+.hdiv{width:1px;height:34px;background:rgba(212,160,23,.4)}
+
+/* ── LAYOUT ── */
+#layout{display:flex;height:calc(100vh - 50px);overflow:hidden;width:100%}
+
+/* ── MAP ── */
+#mwrap{flex:1;position:relative;overflow:hidden;background:radial-gradient(ellipse at 36% 54%,#5b9db5 0%,#3c7993 65%,#2a5c75 100%)}
+#msvg{width:100%;height:100%}
+
+.cp{stroke:rgba(255,255,255,.55);stroke-width:.55;stroke-linejoin:round;cursor:pointer;transition:filter .15s,stroke .15s,stroke-width .15s}
+.cp:hover{stroke:#fff;stroke-width:1.8;filter:brightness(1.12) drop-shadow(0 0 5px rgba(255,255,255,.45))}
+.cp.done{fill:var(--done)!important;stroke:#2a7020;cursor:default}
+.cp.done:hover{filter:brightness(1.05);stroke-width:.55}
+.cp.lit{stroke:var(--gold);stroke-width:2.5;filter:brightness(1.08)}
+
+#leg{
+  position:absolute;bottom:14px;left:14px;
+  background:rgba(245,230,195,.94);border:1px solid var(--brnm);
+  border-radius:8px;padding:7px 11px;font-size:.68rem;color:var(--brn);
+  box-shadow:0 2px 8px rgba(0,0,0,.2)
+}
+.legr{display:flex;align-items:center;gap:7px;padding:2px 0;font-weight:700}
+.legsw{width:13px;height:13px;border-radius:3px;border:1px solid rgba(0,0,0,.15)}
+
+#tip{
+  position:fixed;background:rgba(5,2,0,.9);color:#f5e6c3;padding:5px 11px;
+  border-radius:6px;font-size:.76rem;font-weight:700;letter-spacing:.3px;
+  pointer-events:none;display:none;z-index:60;border:1px solid var(--gold)
+}
+
+/* ── SIDEBAR ── */
+#sb{
+  width:var(--W);flex-shrink:0;
+  background:linear-gradient(175deg,#142506 0%,#0c1904 100%);
+  border-left:2px solid var(--grass3);display:flex;flex-direction:column;overflow:hidden
+}
+
+/* Score */
+#scard{padding:10px 12px 9px;background:rgba(0,0,0,.4);border-bottom:1px solid var(--grass3);flex-shrink:0}
+.srow{display:flex;align-items:stretch}
+.sbox{flex:1;text-align:center;padding:0 3px}
+.snum{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:var(--gold2);line-height:1}
+.slbl{font-size:.68rem;color:var(--grass2);text-transform:uppercase;letter-spacing:1.3px;margin-top:3px}
+.ssep{width:1px;background:var(--grass3);margin:0 5px;flex-shrink:0}
+#mstone{margin-top:8px;font-size:.76rem;color:var(--grass2);text-align:center;min-height:16px;letter-spacing:.3px;line-height:1.3}
+.pbg{margin-top:6px;background:rgba(0,0,0,.45);border:1px solid var(--grass3);border-radius:30px;height:10px;overflow:hidden}
+#pfill{height:100%;width:0%;background:linear-gradient(90deg,var(--grass3),var(--grass2));border-radius:30px;transition:width .75s cubic-bezier(.34,1.56,.64,1)}
+
+/* Zuzu video corner */
+#cwrap{flex:1;padding:8px 12px 6px;display:flex;flex-direction:column;overflow:hidden;min-height:0;gap:6px}
+#ctit{text-align:center;font-family:'Playfair Display',serif;color:var(--grass2);font-size:.9rem;letter-spacing:.8px;flex-shrink:0}
+#zvwrap{flex:1;position:relative;border-radius:14px;overflow:hidden;background:#0a0a0a;min-height:0;display:flex;flex-direction:column}
+#zidle{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative}
+#zidleface{width:100%;height:100%;object-fit:cover;object-position:center 10%;filter:brightness(.55) saturate(.7);transition:filter .6s}
+#zidle.alive #zidleface{filter:brightness(.85) saturate(1)}
+#zidlemsg{position:absolute;bottom:0;left:0;right:0;padding:9px 12px 11px;background:linear-gradient(transparent,rgba(0,0,0,.85));color:rgba(255,255,255,.85);font-size:.74rem;font-weight:700;text-align:center;line-height:1.4}
+#zvactive{display:none;position:absolute;inset:0;width:100%;height:100%}
+#zvactive.playing{display:block}
+#zvside{width:100%;height:100%;object-fit:cover;object-position:center 10%}
+#zvcap{position:absolute;bottom:0;left:0;right:0;padding:9px 12px 11px;background:linear-gradient(transparent,rgba(0,0,0,.88));font-family:'Nunito',sans-serif;font-weight:900;font-size:.82rem;color:white;text-align:center;line-height:1.6;min-height:42px}
+#znxtlbl{font-size:.68rem;color:var(--grass2);text-align:center;letter-spacing:.3px;flex-shrink:0}
+
+
+/* Cartoon Zuzu styling */
+.zuzu-container{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 40%, #2a5036 0%, #1a3a26 70%, #0c1f15 100%);
+  position:relative;overflow:hidden;
+}
+.zuzu-svg{
+  width:90%;height:90%;max-width:340px;
+  animation:zuzuBob 3.4s ease-in-out infinite;
+  transition:transform .4s ease;
+}
+@keyframes zuzuBob{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-4px) scale(1.012)}
+}
+/* Blinking */
+.zw{transform-origin:center;transform-box:fill-box;animation:zuzuBlink 5.7s ease-in-out infinite}
+.zw-r{animation-delay:.05s}
+@keyframes zuzuBlink{
+  0%,94%,100%{transform:scaleY(1)}
+  96%,98%{transform:scaleY(.08)}
+}
+/* Talking mouth animation */
+.zuzu-container.talking .zm-happy{animation:mouthTalk .26s ease-in-out infinite alternate}
+.zuzu-container.talking .zm-tongue{animation:mouthTalk .26s ease-in-out infinite alternate}
+@keyframes mouthTalk{
+  0%{transform:scaleY(.45);transform-origin:center top}
+  100%{transform:scaleY(1);transform-origin:center top}
+}
+/* Expression states — control which mouth & eye shapes show */
+.zuzu-container.happy .zm-idle{opacity:0}
+.zuzu-container.happy .zm-happy{opacity:1}
+.zuzu-container.happy .zm-tongue{opacity:1}
+.zuzu-container.happy .zuzu-blush{opacity:.55}
+.zuzu-container.happy .zs{r:4.5}
+
+.zuzu-container.mid .zm-idle{opacity:0}
+.zuzu-container.mid .zm-smirk{opacity:1}
+
+.zuzu-container.shook .zm-idle{opacity:0}
+.zuzu-container.shook .zm-shook{opacity:1}
+.zuzu-container.shook .zw{transform:scaleY(1.15) scaleX(1.08)}
+.zuzu-container.shook .zb{opacity:1}
+
+.zuzu-container.angry .zm-idle{opacity:0}
+.zuzu-container.angry .zm-smirk{opacity:1}
+.zuzu-container.angry .zb{opacity:1}
+.zuzu-container.angry .zp{transform:translateY(3px)}
+
+.zuzu-container.sass .zm-idle{opacity:0}
+.zuzu-container.sass .zm-smirk{opacity:1}
+.zuzu-container.sass .zb{opacity:1}
+.zuzu-container.sass .zp{transform:translate(2px, 2px)}
+
+.zuzu-container.talking .zm-idle{opacity:0}
+.zuzu-container.talking .zm-happy{opacity:1}
+.zuzu-container.talking .zm-tongue{opacity:1}
+
+.zuzu-container.sleeping .zw{transform:scaleY(.1)}
+.zuzu-container.sleeping{filter:saturate(.6) brightness(.7)}
+.zuzu-container.sleeping .zuzu-svg{animation:zuzuBob 4.5s ease-in-out infinite}
+
+/* Idle caption overlay */
+.zuzu-cap{
+  position:absolute;left:0;right:0;bottom:0;
+  padding:10px 14px;
+  background:linear-gradient(transparent,rgba(0,0,0,.88));
+  font-weight:800;font-size:.78rem;text-align:center;
+  color:#fff;line-height:1.5;letter-spacing:.2px;
+  font-family:'Nunito',sans-serif;
+  min-height:42px;
+}
+
+
+
+
+/* Country description text (karaoke-highlighted with video) */
+#study-text-pop{flex:1 1 0;min-width:240px;max-width:520px;padding:18px 22px;background:rgba(255,255,255,.04);border-radius:10px;font-size:.95rem;line-height:1.6;color:rgba(255,250,235,.5);text-align:left;font-family:'Nunito',sans-serif;transition:color .2s ease;align-self:stretch}
+#study-text-pop .kw{transition:color .25s ease, text-shadow .25s ease;display:inline}
+#study-text-pop .kw.lit{color:#fff8d0;text-shadow:0 0 8px rgba(255,212,74,.4)}
+/* Standalone joke (when no video) */
+
+
+
+/* Study popup */
+#study-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+#study-ov.open{display:flex}
+#study-mdl{background:linear-gradient(180deg,#1a3a26 0%,#0c1f15 100%);border-radius:16px;padding:18px 22px 16px;width:auto;min-width:320px;max-width:min(96vw, 980px);max-height:94vh;box-shadow:0 30px 80px rgba(0,0,0,.65),0 0 0 2px var(--gold);position:relative;animation:mIn .28s cubic-bezier(.34,1.56,.64,1) both;text-align:center;display:flex;flex-direction:column}
+#study-close{position:absolute;top:10px;right:12px;background:transparent;border:none;color:#e8d4a0;font-size:1.8rem;line-height:1;cursor:pointer;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .15s}
+#study-close:hover{background:rgba(255,255,255,.12)}
+#study-flag-pop{font-size:2.6rem;line-height:1;margin-bottom:2px}
+#study-name-pop{font-family:'Playfair Display',serif;font-size:1.55rem;color:var(--gold);font-weight:800;margin-bottom:1px;letter-spacing:.3px;line-height:1.1}
+#study-capital-pop{font-size:.85rem;color:#e8d4a0;font-weight:600;margin-bottom:10px}
+#study-video-wrap-pop{flex:0 0 400px;max-width:48%;border-radius:12px;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center;align-self:stretch}
+#study-video-pop{display:block;width:100%;height:auto;max-height:min(60vh,460px);object-fit:contain}
+
+#study-header-pop{flex:0 0 auto}
+#study-body-pop{display:flex;gap:14px;align-items:stretch;justify-content:center;flex:1 1 auto;min-height:0;max-width:100%}
+@media (max-width:760px){#study-body-pop{flex-wrap:wrap}#study-video-wrap-pop{flex:0 0 auto;max-width:100%}}
+#study-body-pop.no-video{justify-content:center}
+#study-body-pop.no-video #study-text-pop{flex:0 1 640px;max-width:720px;font-size:1rem;line-height:1.7;padding:22px 28px;align-self:auto}
+#study-body-pop.no-video #study-text-pop.joke-mode{font-style:italic;text-align:center;background:linear-gradient(135deg,rgba(212,160,23,.12),rgba(212,160,23,.04));border:1px solid rgba(212,160,23,.35);justify-content:center}
+#study-text-pop strong{color:var(--gold);font-weight:800;font-size:1.04em;letter-spacing:.4px}
+#study-text-pop .kw{transition:color .25s ease, text-shadow .25s ease}
+#study-text-pop .kw.lit{color:#fff8d0;text-shadow:0 0 8px rgba(255,212,74,.4)}
+#study-text-pop strong .kw.lit{color:#ffd44a;text-shadow:0 0 10px rgba(255,212,74,.6)}
+
+/* Quiz restart pill (floating in corner during quiz mode) */
+#quiz-restart-pill{position:fixed;top:62px;left:14px;background:rgba(0,0,0,.6);color:var(--gold);border:1.5px solid var(--gold);font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;padding:6px 12px;border-radius:20px;cursor:pointer;display:none;z-index:50;letter-spacing:.3px;backdrop-filter:blur(6px)}
+#quiz-restart-pill.show{display:block}
+#quiz-restart-pill:hover{background:var(--gold);color:#3a2010}
+
+/* Mode switcher in header */
+.modesw{display:flex;gap:6px;background:rgba(0,0,0,.35);padding:5px;border-radius:12px;border:1px solid var(--grass3)}
+.modebtn{background:transparent;border:none;color:#e8d4a0;font-family:'Nunito',sans-serif;font-weight:800;font-size:.9rem;padding:9px 18px;border-radius:8px;cursor:pointer;letter-spacing:.3px;transition:all .2s ease;display:flex;align-items:center;gap:6px}
+.modebtn:hover{background:rgba(255,255,255,.08)}
+.modebtn.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#3a2010;box-shadow:0 2px 8px rgba(212,160,23,.4)}
+/* Mode panels */
+.mode-panel{display:none;flex-direction:column;height:100%;overflow:hidden}
+.mode-panel.active{display:flex}
+.sp-header{display:flex;gap:10px;align-items:center;padding:14px 16px 10px;border-bottom:1px solid var(--grass3);flex-shrink:0}
+.sp-title{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--gold);font-weight:800}
+.sp-sub{font-size:.72rem;color:var(--grass2);opacity:.85}
+/* Study panel */
+#study-content{flex:1;padding:14px 16px;overflow-y:auto;min-height:0}
+#study-capital{font-size:.95rem;color:#e8d4a0;text-align:center;margin-bottom:14px;font-weight:600}
+#study-empty{text-align:center;padding:40px 20px;color:#e8d4a0}
+#study-video-fallback{padding:30px 20px;text-align:center;color:#e8d4a0}
+#study-flag{font-size:3.4rem;text-align:center;margin-bottom:6px;line-height:1}
+#study-name{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--gold);text-align:center;font-weight:700;margin-bottom:2px}
+#study-video-wrap{border-radius:12px;overflow:hidden;background:#0a0a0a;margin-bottom:14px;position:relative;min-height:200px;display:flex;align-items:center;justify-content:center}
+#study-video{width:100%;display:block;max-height:340px;background:#000}
+#study-video-fallback{padding:30px 20px;text-align:center;color:#e8d4a0}
+#study-explored-tags-wrap h4{font-family:'Playfair Display',serif;color:var(--gold);font-size:.95rem;margin:0 0 8px 0;font-weight:700;letter-spacing:.3px}
+#study-tags{display:flex;flex-wrap:wrap;gap:5px}
+.empty-hint{font-size:.65rem;color:var(--grass2);font-style:italic;opacity:.75}
+/* Quiz panel */
+#quiz-scard{padding:12px 16px 8px;border-bottom:1px solid var(--grass3);flex-shrink:0}
+#quiz-restart-btn{margin:10px 16px 14px;padding:9px 14px;background:transparent;border:1.5px solid var(--gold);color:var(--gold);font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;border-radius:8px;cursor:pointer;flex-shrink:0;transition:all .15s ease}
+#quiz-restart-btn:hover{background:var(--gold);color:#3a2010}
+/* Stats */
+#strow{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--grass3);flex-shrink:0}
+.stc{padding:6px 2px;text-align:center;border-right:1px solid rgba(58,120,32,.35)}
+.stc:last-child{border-right:none}
+.stn{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--gold2)}
+.stl{font-size:.6rem;color:var(--grass2);text-transform:uppercase;letter-spacing:.8px}
+
+/* Done list */
+#dsec{border-top:1px solid var(--grass3);padding:6px 12px 8px;flex-shrink:0;max-height:100px;overflow-y:auto}
+#dsec h4{font-size:.64rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--grass2);margin-bottom:4px}
+#dtags{display:flex;flex-wrap:wrap;gap:4px}
+.dtag{background:rgba(58,120,32,.28);border:1px solid var(--grass3);border-radius:4px;padding:2px 7px;font-size:.67rem;color:#a5d6a7}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:var(--grass3);border-radius:2px}
+
+
+
+/* ── MODAL ── */
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:100}
+#ov.open{display:flex}
+#mdl{background:var(--paper);border-radius:16px;padding:20px 22px;width:420px;max-width:93vw;max-height:88vh;overflow-y:auto;overflow-x:hidden;box-shadow:0 30px 80px rgba(0,0,0,.65),0 0 0 3px var(--gold);animation:mIn .3s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes mIn{from{transform:scale(.82) translateY(24px);opacity:0}to{transform:scale(1);opacity:1}}
+
+#mflag{text-align:center;font-size:3rem;margin-bottom:2px;line-height:1}
+#mprompt{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;font-style:italic;color:var(--brn);text-align:center;margin-bottom:16px}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--brnm);margin-bottom:4px}
+.fg input{width:100%;padding:9px 12px;border:2px solid #e0d8cc;border-radius:9px;font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:600;color:var(--brn);background:white;outline:none;transition:border-color .2s,box-shadow .2s}
+.fg input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,160,23,.18)}
+.fg input.ok{border-color:var(--ok);background:#f0fff5}
+.fg input.no{border-color:var(--err);background:#fff4f4}
+
+#sbtn{width:100%;padding:11px;background:linear-gradient(135deg,#d4a017,#e06c1a);color:white;font-family:'Playfair Display',serif;font-size:1.02rem;font-weight:700;border:none;border-radius:9px;cursor:pointer;letter-spacing:1px;transition:all .18s;box-shadow:0 4px 16px rgba(212,160,23,.3)}
+#sbtn:hover{transform:translateY(-2px);box-shadow:0 7px 22px rgba(212,160,23,.45)}
+#sbtn:active{transform:none}
+
+#rp{display:none;margin-top:13px;background:#faf5ea;border:1px solid #e8dcc8;border-radius:10px;padding:12px}
+#rp.show{display:block}
+/* Zuzu reaction card */
+#zreact{display:none;margin-bottom:10px;border-radius:12px;overflow:hidden;position:relative;background:#111;height:300px}
+#zmodal{height:100%;width:100%}
+#zreact.show{display:block}
+#zvid,#zimg{width:100%;height:100%;object-fit:cover;object-position:center 15%}
+#zcap{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:10px 14px 12px;
+  background:linear-gradient(transparent,rgba(0,0,0,.82));
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:.88rem;
+  color:white;text-align:center;line-height:1.4;min-height:44px
+}
+.zcap-badge{
+  display:inline-block;background:#00c853;color:white;
+  padding:2px 10px;border-radius:20px;margin:2px 3px;
+  font-size:.82rem;font-weight:900;letter-spacing:.3px
+}
+.zcap-badge.bad{background:#d32f2f}
+#zcap-loading{font-style:italic;opacity:.7;font-size:.78rem}
+@keyframes wordPop{from{opacity:0;transform:scale(.7) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.zcap-badge{animation:wordPop .18s ease both}
+@keyframes dotdot{0%{content:'.'}33%{content:'..'}66%{content:'...'}}
+.rrow{display:flex;align-items:center;padding:5px 0;font-size:.87rem;border-bottom:1px solid #ede5d4}
+.rrow:last-of-type{border-bottom:none}
+.rric{font-size:.95rem;margin-right:6px}
+.rrlb{font-weight:700}.rrlb.ok{color:var(--ok)}.rrlb.no{color:var(--err)}
+.rrans{font-size:.77rem;color:var(--brnl);margin-left:auto;font-style:italic}
+.pshow{text-align:center;padding:9px 0 3px;margin-top:5px;border-top:2px dashed var(--gold)}
+#pnum{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;line-height:1}
+#pmsg{font-size:.76rem;color:var(--brnm);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:3px}
+#cbtn{width:100%;padding:9px;margin-top:9px;background:var(--brn);color:var(--parch);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:800;border:none;border-radius:8px;cursor:pointer;transition:background .15s}
+#cbtn:hover{background:var(--brnm)}
+
+/* Zoom buttons */
+#zbts{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;gap:5px;z-index:20}
+.zb{width:34px;height:34px;background:rgba(245,230,195,.93);border:1px solid var(--brnm);border-radius:7px;cursor:pointer;font-size:1.15rem;font-weight:900;color:var(--brn);display:flex;align-items:center;justify-content:center;line-height:1;transition:background .15s;user-select:none;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.zb:hover{background:var(--parch);border-color:var(--brn)}
+.zb.reset{font-size:.75rem;letter-spacing:.5px}
+@keyframes fup{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-90px) scale(1.5)}}
+.fpt{position:fixed;pointer-events:none;font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:900;color:var(--gold2);text-shadow:0 2px 10px rgba(0,0,0,.65);z-index:300;animation:fup 1.7s ease-out forwards}
+
+/* Win overlay */
+/* Hints & I Don't Know */
+@keyframes hintIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.hlrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.hlrow label{margin-bottom:0}
+.hbtn{padding:3px 11px;background:rgba(212,160,23,.1);border:1.5px solid rgba(212,160,23,.55);color:var(--brnm);border-radius:6px;font-size:.7rem;font-weight:800;cursor:pointer;transition:all .18s;font-family:'Nunito',sans-serif;letter-spacing:.3px;white-space:nowrap}
+.hbtn:hover{background:rgba(212,160,23,.25);border-color:var(--gold)}
+.hbtn:disabled{opacity:.4;cursor:default}
+.hbox{display:none;margin:-2px 0 13px;background:linear-gradient(135deg,#fff9d0,#fff3a0);border:2px dashed #d4a017;border-radius:10px;padding:10px 14px;font-size:.84rem;color:var(--brn);line-height:1.65;animation:hintIn .28s ease}
+.hbox.show{display:block}
+.hloading{text-align:center;color:var(--brnl);font-style:italic;animation:hpulse 1.2s ease infinite}
+@keyframes hpulse{0%,100%{opacity:.5}50%{opacity:1}}
+.brow{display:flex;gap:8px}
+.brow #sbtn{flex:2}
+#idkbtn{flex:1;padding:11px 6px;background:rgba(231,76,60,.08);border:1.5px solid #e74c3c;color:#a82020;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;border-radius:9px;cursor:pointer;transition:all .18s;white-space:nowrap}
+#idkbtn:hover{background:rgba(231,76,60,.16)}
+#idkbtn:disabled{opacity:.45;cursor:default}
+#pmsg.idk{text-transform:none;letter-spacing:0;font-size:.84rem;font-style:italic;line-height:1.5;font-weight:600}
+#restart-btn{padding:6px 13px;background:rgba(212,160,23,.12);border:1.5px solid rgba(212,160,23,.4);color:var(--gold2);border-radius:7px;font-size:.7rem;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;letter-spacing:.5px;transition:all .18s;flex-shrink:0}
+#restart-btn:hover{background:rgba(212,160,23,.28);border-color:var(--gold)}
+
+#winov{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:200}
+#winov.open{display:flex}
+#winbox{background:var(--paper);border-radius:20px;padding:36px;text-align:center;border:3px solid var(--gold);max-width:400px;animation:mIn .4s cubic-bezier(.34,1.56,.64,1)}
+#winbox h2{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--gold);font-weight:900;margin-bottom:10px}
+#winbox p{color:var(--brn);font-size:.95rem;margin-bottom:20px;line-height:1.5}
+#winbox button{padding:12px 28px;background:var(--gold);color:white;border:none;border-radius:10px;font-size:.95rem;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <span style="font-size:1.7rem">🗺️</span>
+  <div><h1>EuroQuest</h1><div class="hsub">European Geography</div></div>
+  <div class="hsp"></div>
+  <div class="modesw">
+    <button id="mode-study" class="modebtn active">📖 Study</button>
+    <button id="mode-quiz" class="modebtn">🎯 Quiz</button>
+  </div>
+</div>
+
+<div id="layout">
+
+  <!-- ════ MAP ════ -->
+  <div id="mwrap">
+    <svg id="msvg"></svg>
+    <div id="zbts">
+      <button class="zb" id="zin" title="Zoom in">+</button>
+      <button class="zb" id="zout" title="Zoom out">−</button>
+      <button class="zb reset" id="zrst" title="Reset view">⌂</button>
+    </div>
+    <div id="leg">
+      <div class="legr"><div class="legsw" style="background:#c5dba7"></div>Undiscovered</div>
+      <div class="legr"><div class="legsw" style="background:#5aac5a;border-color:#2d7a2d"></div>Conquered ✓</div>
+      <div class="legr" style="margin-top:4px;font-size:.6rem;color:var(--brnl);font-weight:600">🖱 Scroll or +/− to zoom</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Study popup -->
+<div id="study-ov">
+  <div id="study-mdl">
+    <button id="study-close" aria-label="Close">×</button>
+    <div id="study-header-pop">
+      <div id="study-flag-pop"></div>
+      <div id="study-name-pop"></div>
+      <div id="study-capital-pop"></div>
+    </div>
+    <div id="study-body-pop">
+      <div id="study-video-wrap-pop" style="display:none">
+        <video id="study-video-pop" controls autoplay playsinline></video>
+      </div>
+      <div id="study-text-pop" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div id="tip"></div>
+
+<!-- Floating quiz restart button -->
+<button id="quiz-restart-pill">↺ Restart Quiz</button>
+
+<!-- Quiz Modal -->
+<div id="ov">
+  <div id="mdl">
+    <div id="mflag">🌍</div>
+    <div id="mprompt">Identify this European country!</div>
+    <div class="fg">
+      <div class="hlrow">
+        <label for="ic">🗺️ Country Name</label>
+        <button class="hbtn" id="hcbtn">💡 Hint</button>
+      </div>
+      <input id="ic" type="text" placeholder="e.g. Germany" autocomplete="off" spellcheck="false"/>
+    </div>
+    <div class="hbox" id="hcbox"></div>
+    <div class="fg">
+      <div class="hlrow">
+        <label for="ik">🏛️ Capital City</label>
+        <button class="hbtn" id="hkbtn">💡 Hint</button>
+      </div>
+      <input id="ik" type="text" placeholder="e.g. Berlin" autocomplete="off" spellcheck="false"/>
+    </div>
+    <div class="hbox" id="hkbox"></div>
+    <div class="brow">
+      <button id="sbtn">Submit ✓</button>
+      <button id="idkbtn">🤷 I don't know</button>
+    </div>
+    <div id="rp">
+      
+      <div class="rrow" id="rcrow">
+        <span class="rric" id="rci">✅</span><span class="rrlb" id="rcl">Country:</span><span class="rrans" id="rca"></span>
+      </div>
+      <div class="rrow" id="rkrow">
+        <span class="rric" id="rki">✅</span><span class="rrlb" id="rkl">Capital:</span><span class="rrans" id="rka"></span>
+      </div>
+      <div class="pshow">
+        <div id="pnum">+25</div>
+        <div id="pmsg">🌟 Perfect score!</div>
+      </div>
+      <button id="cbtn">Continue Exploring →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Win Screen -->
+<div id="winov">
+  <div id="winbox">
+    <div style="font-size:3.8rem;margin-bottom:12px">🏆🐕🗺️</div>
+    <h2>Europe Conquered!</h2>
+    <p id="winmsg">You've explored the whole continent and Zuzu finished the obstacle course!</p>
+    <button onclick="location.reload()">Play Again!</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════════
+   COUNTRY DATA
+════════════════════════════════════════ */
+const CTR = {
+  8:  {n:'Albania',               k:'Tirana',          a:'AL', al:[]},
+  20: {n:'Andorra',               k:'Andorra la Vella',a:'AD', al:[]},
+  40: {n:'Austria',               k:'Vienna',          a:'AT', al:['wien','osterreich','österreich']},
+ 112: {n:'Belarus',               k:'Minsk',           a:'BY', al:['byelorussia','bielorussia']},
+  56: {n:'Belgium',               k:'Brussels',        a:'BE', al:['belgique','belgie','bruxelles','brussel']},
+  70: {n:'Bosnia and Herzegovina',k:'Sarajevo',        a:'BA', al:['bosnia','herzegovina','bih']},
+ 100: {n:'Bulgaria',              k:'Sofia',           a:'BG', al:[]},
+ 191: {n:'Croatia',               k:'Zagreb',          a:'HR', al:['hrvatska']},
+ 196: {n:'Cyprus',                k:'Nicosia',         a:'CY', al:['lefkosia']},
+ 203: {n:'Czechia',               k:'Prague',          a:'CZ', al:['czech republic','czech','cesko','ceska republika','praha']},
+ 208: {n:'Denmark',               k:'Copenhagen',      a:'DK', al:['danmark','kobenhavn','koebenhavn']},
+ 233: {n:'Estonia',               k:'Tallinn',         a:'EE', al:['eesti','talin','tallin']},
+ 246: {n:'Finland',               k:'Helsinki',        a:'FI', al:['suomi','helsingfors']},
+ 250: {n:'France',                k:'Paris',           a:'FR', al:[]},
+ 276: {n:'Germany',               k:'Berlin',          a:'DE', al:['deutschland','allemagne']},
+ 300: {n:'Greece',                k:'Athens',          a:'GR', al:['hellas','ellada','athina','athen']},
+ 348: {n:'Hungary',               k:'Budapest',        a:'HU', al:['magyarorszag','magyarország']},
+ 352: {n:'Iceland',               k:'Reykjavik',       a:'IS', al:['island','reykjavík']},
+ 372: {n:'Ireland',               k:'Dublin',          a:'IE', al:['eire','éire']},
+ 380: {n:'Italy',                 k:'Rome',            a:'IT', al:['italia','roma']},
+ 428: {n:'Latvia',                k:'Riga',            a:'LV', al:['latvija']},
+ 440: {n:'Lithuania',             k:'Vilnius',         a:'LT', al:['lietuva']},
+ 442: {n:'Luxembourg',            k:'Luxembourg',      a:'LU', al:['luxemburg','luxembourg city']},
+ 470: {n:'Malta',                 k:'Valletta',        a:'MT', al:['la valletta','valleta']},
+ 498: {n:'Moldova',               k:'Chișinău',        a:'MD', al:['chisinau','kishinev']},
+ 499: {n:'Montenegro',            k:'Podgorica',       a:'ME', al:['crna gora']},
+ 528: {n:'Netherlands',           k:'Amsterdam',       a:'NL', al:['holland','nederland','the netherlands']},
+ 807: {n:'North Macedonia',       k:'Skopje',          a:'MK', al:['macedonia','makedonia','fyrom']},
+ 578: {n:'Norway',                k:'Oslo',            a:'NO', al:['norge','noreg']},
+ 616: {n:'Poland',                k:'Warsaw',          a:'PL', al:['polska','warszawa']},
+ 620: {n:'Portugal',              k:'Lisbon',          a:'PT', al:['lisboa']},
+ 642: {n:'Romania',               k:'Bucharest',       a:'RO', al:['bucuresti']},
+ 643: {n:'Russia',                k:'Moscow',          a:'RU', al:['russian federation','rossiya','moskva']},
+ 688: {n:'Serbia',                k:'Belgrade',        a:'RS', al:['srbija','beograd']},
+ 703: {n:'Slovakia',              k:'Bratislava',      a:'SK', al:['slovak republic','slovensko']},
+ 705: {n:'Slovenia',              k:'Ljubljana',       a:'SI', al:['slovenija']},
+ 724: {n:'Spain',                 k:'Madrid',          a:'ES', al:['espana','españa']},
+ 752: {n:'Sweden',                k:'Stockholm',       a:'SE', al:['sverige']},
+ 756: {n:'Switzerland',           k:'Bern',            a:'CH', al:['suisse','schweiz','svizzera','swiss','helvetia']},
+ 792: {n:'Turkey',                k:'Ankara',          a:'TR', al:['turkiye','türkiye']},
+ 804: {n:'Ukraine',               k:'Kyiv',            a:'UA', al:['ukraina','kiev','kyjiv']},
+ 826: {n:'United Kingdom',        k:'London',          a:'GB', al:['uk','great britain','britain','england','gb']},
+};
+
+const EUI = new Set(Object.keys(CTR).map(Number));
+const TOTAL = Object.keys(CTR).length;
+
+// Country color palette (classic political map)
+const PAL = ['#c5dba7','#f5d88a','#f5b09a','#9ac8e5','#c0a8d8','#a8d4c0','#f0c898','#d8c0a0','#e8d4a0','#b8dac8'];
+const clr = id => PAL[id % PAL.length];
+
+// Flag emoji from ISO alpha-2
+const flag = a2 => a2 ? [...a2.toUpperCase()].map(c => String.fromCodePoint(c.charCodeAt(0)+127397)).join('') : '🌍';
+
+/* ════════════════════════════════════════
+   FUZZY MATCHING
+════════════════════════════════════════ */
+function normalize(s) {
+  return s.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9 ]/g, '').replace(/ +/g, ' ').trim();
+}
+
+function levenshtein(a, b) {
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_, i) =>
+    Array.from({length: n+1}, (_, j) => i === 0 ? j : j === 0 ? i : 0));
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] :
+        1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function isMatch(input, correct, aliases = []) {
+  if (!input.trim()) return false;
+  const ni = normalize(input), nc = normalize(correct);
+  if (ni === nc) return true;
+  for (const a of aliases) if (ni === normalize(a)) return true;
+  const thr = nc.length <= 4 ? 1 : 2;
+  if (levenshtein(ni, nc) <= thr) return true;
+  for (const a of aliases) {
+    const na = normalize(a);
+    if (levenshtein(ni, na) <= (na.length <= 4 ? 1 : 2)) return true;
+  }
+  return false;
+}
+
+/* ════════════════════════════════════════
+   GAME STATE
+════════════════════════════════════════ */
+const G = {
+  score: 0, streak: 0, best: 0, perf: 0, part: 0,
+  done: new Set(), cur: null,
+  mode: "study", studied: new Set(), sidebarTimer: null
+};
+
+/* ════════════════════════════════════════
+   MILESTONES
+════════════════════════════════════════ */
+// prompt = what to tell Claude so Zuzu says something milestone-appropriate
+const MS = [
+  {pts:0,   next:25,  idle:"Score 25 pts to wake Zuzu up! 🐾",
+   prompt:null},
+  {pts:25,  next:75,  idle:"75 pts for Zuzu's next take...",
+   prompt:"You are Zuzu, a sassy TikTok chocolate Labradoodle. A 13-year-old just scored their first 25 points on a European geography quiz. You barely looked up from your nap. One sassy reaction sentence. Gen-Z dog energy. PG."},
+  {pts:75,  next:175, idle:"175 pts for Zuzu's verdict...",
+   prompt:"You are Zuzu, a sassy TikTok chocolate Labradoodle. A kid has 75 points on a European geography quiz. You're giving them a slow blink of mild interest. One sassy sentence. PG."},
+  {pts:175, next:350, idle:"350 pts for Zuzu's shocked face!",
+   prompt:"You are Zuzu, a sassy TikTok chocolate Labradoodle. A kid has 175 points! They actually know some Europe. You're reluctantly raising an eyebrow. One sassy impressed-ish sentence. PG."},
+  {pts:350, next:500, idle:"500 pts for Zuzu's FINAL BOSS reaction!",
+   prompt:"You are Zuzu, a sassy TikTok chocolate Labradoodle. 350 POINTS! A kid is genuinely crushing this European geography quiz. You are visibly shook. One short shocked and proud sentence. PG."},
+  {pts:500, next:null, idle:"Zuzu has spoken. You're a legend. 🏆",
+   prompt:"You are Zuzu, a sassy TikTok chocolate Labradoodle. A kid just dominated a European geography quiz with 500 points. You absolutely LOSE IT with excitement and disbelief. One hyped final sentence. PG."},
+];
+let prevMsI = 0;
+
+function getProgressPct(sc) {
+  for (let i = MS.length - 1; i >= 0; i--) {
+    if (sc >= MS[i].pts) {
+      if (i === MS.length - 1) return 100;
+      return ((sc - MS[i].pts) / (MS[i+1].pts - MS[i].pts)) * 100;
+    }
+  }
+  return 0;
+}
+
+function getMsIndex(sc) {
+  for (let i = MS.length - 1; i >= 0; i--)
+    if (sc >= MS[i].pts) return i;
+  return 0;
+}
+
+/* ════════════════════════════════════════
+   UI UPDATE
+════════════════════════════════════════ */
+function updateUI() {
+  const sc = G.score;
+  // Header
+  (document.getElementById('hpts') || {}).textContent = sc;
+  (document.getElementById('hdone') || {}).innerHTML = `${G.done.size}<span style="font-size:1rem;opacity:.55">/${TOTAL}</span>`;
+  // Sidebar elements (removed — guard) 
+  const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const setHTML = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+  setText('spts', sc);
+  setHTML('sdone', `${G.done.size}<span style="font-size:.95rem;color:var(--grass2)">/${TOTAL}</span>`);
+  setHTML('sstr', `${G.streak}<span style="font-size:.95rem">🔥</span>`);
+  setText('std', G.done.size);
+  setText('stpf', G.perf);
+  setText('stpa', G.part);
+  setText('stbs', G.best);
+  const mi = getMsIndex(sc);
+  const pct = getProgressPct(sc) + '%';
+  const pf = document.getElementById('pfill'); if (pf) pf.style.width = pct;
+  const cpf = document.getElementById('cpfill'); if (cpf) cpf.style.width = pct;
+  (document.getElementById('mstone') || {}).textContent = MS[mi].idle || MS[mi].pts + ' pts reached!';
+  const m = MS[mi];
+  (document.getElementById('znxtlbl') || {}).textContent =
+    m.next ? `${m.next - sc > 0 ? m.next - sc + ' pts' : '→'} for Zuzu's ${['first','next','next','shocked','FINAL'][mi] || 'next'} reaction!`
+           : "Zuzu has spoken! You're a legend 🏆";
+
+  // Check milestone crossing
+  if (mi > prevMsI) { prevMsI = mi; triggerSidebarVideo(mi); }
+}
+
+function updateDoneList() {
+  const tags = document.getElementById('dtags');
+  if (!tags) return;
+  const arr = [...G.done].map(id => CTR[id]).filter(Boolean)
+    .sort((a, b) => a.n.localeCompare(b.n));
+  if (!arr.length) {
+    tags.innerHTML = '<span style="font-size:.62rem;color:var(--grass2);font-style:italic">Click a country on the map!</span>';
+    return;
+  }
+  tags.innerHTML = arr.map(c => `<span class="dtag">${flag(c.a)} ${c.n}</span>`).join('');
+}
+
+/* ════════════════════════════════════════
+   FLOATING POINTS ANIMATION
+════════════════════════════════════════ */
+function showFloatingPts(pts, x, y) {
+  const d = document.createElement('div');
+  d.className = 'fpt';
+  d.textContent = `+${pts}`;
+  d.style.left = x + 'px';
+  d.style.top = y + 'px';
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), 1800);
+}
+
+/* ════════════════════════════════════════
+   MAP — pure SVG, no CDN dependency
+   Paths pre-computed at 900×600 (Mercator, Europe fitted)
+════════════════════════════════════════ */
+const MAP_COUNTRIES = [{"id": 643, "d": "M820.789,32.553L836.592,23.495L848.895,22.811L850.557,36.311L855.193,24.349L862.832,16L874.844,27.072L871.724,34.644L860.849,41.11L853.56,44.801L852.423,52.658L842.977,60.466L834.201,49.272L838.807,34.06ZM641.685,665.201L626.786,665.413L616.815,663.836L618.652,657.677L629.818,653.109L638.303,655.577L641.889,657.819L641.014,661.664ZM890.938,288.13L910.327,262.064L908.14,248.002L926.246,231.096L952.982,209.666L979.951,203.278L984,190.241L984,185.654L984,199.581L984,210.3L981.059,226.886L956.335,242.325L931.173,271.688L919.103,300.081L906.42,326.495L908.053,348.227L923.534,368.744L918.753,370.898L892.308,367.705L890.151,356.682L875.486,349.912L874.319,335.908L882.6,330.282L882.308,315.555L898.373,291.693ZM984,650.34L984,656.222L984,661.404L984,664.848L955.139,669.65L951.437,674.342L957.268,683.637L949.512,687.11L951.028,690.742L943.244,697.184L956.364,706.147L954.352,712.251L942.952,711.708L940.62,715.495L930.24,708.858L917.412,709.119L908.811,714.524L899.218,709.337L881.375,700.356L868.721,700.688L852.015,714.74L850.995,723.977L842.685,716.659L836.213,730.472L838.574,732.993L833.909,742.311L840.761,750.535L846.796,750.188L851.957,758.189L851.111,764.279L855.251,766.19L851.549,773.109L843.706,775.014L835.659,786.866L843.006,797.581L842.219,805.08L851.053,818L846.213,822.363L844.814,825.099L841.257,824.37L835.688,817.797L833.414,817.429L828.311,814.903L825.833,810.418L818.282,808.109L813.354,809.842L811.955,807.792L800.934,802.489L789.009,800.681L782.158,798.773L781.166,800.096L770.845,790.61L761.603,786.326L754.605,779.605L760.495,777.753L767.23,768.036L762.682,763.381L774.635,758.551L774.402,755.951L767.142,757.867L767.405,752.569L771.574,749.209L779.417,748.33L780.7,744.29L778.892,737.545L782.187,731.061L782.099,727.413L770.145,723.339L765.422,723.467L760.407,717.541L754.197,719.558L743.934,715.085L744.109,712.576L741.223,707.001L734.75,706.366L734.08,702.344L736.121,699.692L730.931,692.247L722.534,693.524L720.085,692.852L718.044,695.848L715.012,695.334L713.029,686.815L711.105,682.361L712.679,681.104L719.21,681.561L722.359,678.607L720.027,674.99L714.574,672.581L715.041,670.093L711.746,667.57L706.673,658.438L708.422,654.643L707.635,647.971L699.705,644.544L695.448,646.248L694.311,642.688L685.768,639.031L683.174,630.396L682.474,623.172L678.567,619.716L682.066,614.928L679.646,600.57L685.419,591.491L684.194,588.719L693.407,579.82L684.923,572.081L702.241,550.635L709.764,540.656L712.825,531.686L700.842,519.368L704.137,507.381L696.848,493.331L702.3,476.681L692.882,453.657L700.346,437.835L687.955,423.397L689.15,407.762L695.681,405.686L709.472,396.471L717.811,388.319L731.106,402.401L753.293,407.801L783.907,432.789L790.117,442.938L790.642,456.797L781.662,467.501L768.425,472.82L732.272,457.458L726.324,460.057L739.532,474.805L740.057,483.921L740.581,503.46L751.019,509.142L757.346,513.923L758.396,504.95L753.497,496.847L758.658,489.594L778.251,501.456L785.044,496.847L779.621,482.733L798.485,463.261L805.949,464.427L813.529,471.437L818.223,457.527L811.488,445.15L815.454,432.424L809.506,418.84L832.16,425.919L836.767,438.015L826.533,440.644L826.562,452.29L832.947,459.365L845.455,454.915L847.438,441.577L864.348,431.364L892.629,412.459L898.723,413.56L890.763,426.99L900.793,429.237L906.595,421.758L921.785,421.161L933.797,411.926L943.04,425.289L952.224,410.593L943.739,397.333L947.967,389.634L971.875,396.706L983.1,403.911L984,429.347L984,417.864L984,405.956L984,401.119L984,398.859L984,387.8L984,369.034L984,361.129L984,338.035L984,313.7ZM728.365,771.179L730.493,768.293L736.266,770.804L738.861,771.258L739.911,773.561L741.135,773.915L741.194,774.916L745.159,777.694L753.439,777.011L751.836,781.102L742.972,783.1L731.98,789.69L727.49,787.366L729.269,782.015L720.406,778.65L721.863,776.444L729.59,772.578Z", "cx": 842.2582547987246, "cy": 557.0090725633933}, {"id": 578, "d": "M580.224,75.856L583.286,60.15L595.181,58.566L605.386,74.631L632.063,107.217L611.683,123.604L607.164,152.758L600.079,159.919L596.231,190.301L586.464,191.681L569.028,169.553L576.376,156.19L564.247,145.091L548.473,110.924L542.176,76.85L564.247,60.387L568.678,76.468ZM709.472,396.471L695.681,405.686L689.15,407.762L692.562,391.62L682.182,382.217L669.616,390.23L665.622,407.148L657.895,417.111L649.207,411.698L638.653,412.801L629.643,400.808L624.774,406.841L619.76,407.762L618.564,422.467L603.316,418.915L601.158,431.107L593.373,431.034L588.038,446.217L579.933,468.964L567.366,496.429L570.311,502.888L567.483,510.271L559.465,509.957L554.217,527.036L554.713,550.287L559.873,558.919L557.191,578.364L550.456,589.393L546.899,598.507L541.447,588.799L525.469,606.949L514.653,610.538L503.457,602.679L500.57,585.714L498.005,547.378L505.469,536.145L526.84,521.15L542.846,502.125L557.658,475.208L577.134,435.409L590.691,419.028L612.937,390.429L630.722,380.03L644.046,381.287L656.379,361.087L671.132,362.182L685.681,357.192L711.017,375.26L700.58,381.691ZM679.558,58.248L667.546,82.84L644.046,88.086L620.168,80.726L618.71,68.224L607.106,67.368L598.242,45.78L623.258,32.134L635.008,43.901L643.201,29.187L663.668,41.522ZM657.808,151.716L639.731,167.162L625.445,158.444L631.014,148.579L626.145,136.02L642.909,127.939L646.116,142.906Z", "cx": 593.4700702475893, "cy": 288.4199800758903}, {"id": 250, "d": "M39.208,1157.703L34.427,1165.121L31.948,1171.105L28.829,1174.178L24.951,1174.754L23.843,1172.477L22.035,1172.134L19.528,1174.329L16,1172.655L18.07,1169.252L18.77,1165.546L20.198,1162.058L17.02,1157.236L16.379,1151.68L20.577,1144.686L23.347,1145.582L29.295,1147.51L37.867,1154.376ZM507.684,729.124L511.504,732.384L523.166,734.667L519.084,743.054L518.064,751.675L515.819,753.725L512.145,752.63L512.408,755.668L506.489,762.342L506.343,767.659L510.221,765.832L512.991,770.962L512.67,774.249L515.061,778.592L512.233,782.092L514.332,790.897L518.734,792.331L517.801,797.202L510.454,803.504L494.477,800.492L482.698,804.105L481.765,810.734L472.377,812.164L463.251,807.194L460.306,809.563L445.407,804.555L442.171,800.228L446.37,793.514L447.915,770.686L439.547,758.33L433.57,752.284L421.208,747.655L420.392,738.771L430.888,736.087L444.474,739.248L441.909,725.21L449.577,730.578L468.411,720.8L470.861,710.361L477.945,707.766L479.112,712.272L482.873,712.489L486.634,717.605L492.29,723.573L496.459,722.593L503.544,728.301L505.352,729.398ZM528.414,809.041L533.633,804.818L535.003,814.256L532.321,822.637L528.647,820.441L526.781,813.109Z", "cx": 446.7319820995946, "cy": 789.9547298992708}, {"id": 752, "d": "M546.899,598.507L550.456,589.393L557.191,578.364L559.873,558.919L554.713,550.287L554.217,527.036L559.465,509.957L567.483,510.271L570.311,502.888L567.366,496.429L579.933,468.964L588.038,446.217L593.373,431.034L601.158,431.107L603.316,418.915L618.564,422.467L619.76,407.762L624.774,406.841L635.591,417.826L648.216,432.716L648.449,464.872L651.16,472.686L637.224,478.284L629.381,491.872L630.635,503.46L617.777,518.321L602.12,533.786L596.231,558.119L602.004,569.877L609.73,578.969L602.295,596.968L593.869,600.623L590.779,626.204L586.201,639.99L576.376,638.588L571.769,650.003L562.41,650.654L559.815,637.033L553.051,620.2Z", "cx": 594.0413783949531, "cy": 521.3884089731504}, {"id": 112, "d": "M685.768,639.031L694.311,642.688L695.448,646.248L699.705,644.544L707.635,647.971L708.422,654.643L706.673,658.438L711.746,667.57L715.041,670.093L714.574,672.581L720.027,674.99L722.359,678.607L719.21,681.561L712.679,681.104L711.105,682.361L713.029,686.815L715.012,695.334L708.043,696.115L705.565,698.983L705.04,705.555L701.804,704.304L694.515,704.919L692.387,701.881L689.355,704.15L686.293,702.256L679.937,701.991L670.899,698.872L662.706,697.829L656.438,698.14L652.006,701.682L648.128,702.19L647.953,696.36L645.475,690.224L650.315,687.494L650.373,682.155L648.128,676.997L647.778,670.955L655.592,671.048L664.397,665.835L666.263,657.962L672.911,653.421L672.153,647.049L677.08,644.617Z", "cx": 684.264617020088, "cy": 675.8626026858218}, {"id": 804, "d": "M715.012,695.334L718.044,695.848L720.085,692.852L722.534,693.524L730.931,692.247L736.121,699.692L734.08,702.344L734.75,706.366L741.223,707.001L744.109,712.576L743.934,715.085L754.197,719.558L760.407,717.541L765.422,723.467L770.145,723.339L782.099,727.413L782.187,731.061L778.892,737.545L780.7,744.29L779.417,748.33L771.574,749.209L767.405,752.569L767.142,757.867L760.67,758.833L755.276,762.662L747.695,763.281L740.727,767.659L741.135,773.915L739.911,773.561L738.861,771.258L736.266,770.804L730.493,768.293L728.365,771.179L727.257,769.916L714.662,766.964L714.108,762.562L706.615,764.02L703.612,770.469L697.343,779.04L693.67,777.069L689.85,778.923L686.235,776.796L688.276,775.543L689.704,771.554L691.92,767.837L691.337,765.732L693.028,764.797L693.815,766.408L698.597,766.766L700.754,765.892L699.238,764.697L699.792,762.942L696.964,759.938L695.798,754.961L692.853,752.995L693.436,748.923L689.792,745.667L686.439,745.215L680.491,741.423L675.097,742.621L673.173,744.413L669.733,744.413L667.721,747.266L661.744,748.412L658.974,750.27L655.213,747.328L650.023,747.266L645.008,745.934L641.51,748.535L640.956,745.277L636.437,741.96L638.04,737.024L640.285,733.809L642.035,734.542L639.965,728.955L647.312,718.508L651.335,717.025L652.181,713.442L648.128,702.19L652.006,701.682L656.438,698.14L662.706,697.829L670.899,698.872L679.937,701.991L686.293,702.256L689.355,704.15L692.387,701.881L694.515,704.919L701.804,704.304L705.04,705.555L705.565,698.983L708.043,696.115Z", "cx": 710.248571461844, "cy": 732.2214784344504}, {"id": 616, "d": "M647.778,670.955L648.128,676.997L650.373,682.155L650.315,687.494L645.475,690.224L647.953,696.36L648.128,702.19L652.181,713.442L651.335,717.025L647.312,718.508L639.965,728.955L642.035,734.542L640.285,733.809L632.588,729.04L626.757,730.809L622.937,729.525L618.127,732.196L614.045,727.773L610.721,729.483L610.255,728.723L606.552,722.551L600.517,721.783L599.759,717.82L594.19,716.4L592.994,719.687L588.592,717.068L589.088,713.551L583.052,712.446L579.204,708.29L575.88,700.002L576.521,695.468L574.51,688.376L571.565,683.614L573.81,680.006L571.944,673.092L577.454,669.043L590.108,662.633L600.313,657.891L608.389,660.267L609.001,663.671L616.815,663.836L626.786,665.413L641.685,665.201L645.825,666.704Z", "cx": 613.8484278273902, "cy": 693.8806608132793}, {"id": 40, "d": "M595.094,745.605L594.481,750.535L589.933,750.575L591.478,753.178L588.796,760.84L587.251,762.842L580.166,763.121L576.084,765.792L569.407,764.896L557.803,761.842L555.996,757.726L548.007,759.777L547.074,762.042L542.147,760.359L538.006,760.038L534.362,757.867L535.587,754.94L535.295,752.833L537.715,752.162L541.826,755.486L542.963,752.325L550.106,752.833L555.908,750.677L559.786,751.044L562.322,753.502L563.081,751.471L561.914,743.59L564.83,742.043L567.687,736.399L573.693,740.347L578.271,735.315L581.128,734.395L587.397,738.148L591.216,737.524L594.948,739.829L594.277,741.381Z", "cx": 571.6350530238433, "cy": 751.6277607387285}, {"id": 348, "d": "M636.437,741.96L640.956,745.277L641.51,748.535L636.553,751.044L632.734,759.155L627.836,767.163L621.334,769.362L616.29,768.848L610.08,771.909L607.048,773.66L600.371,771.416L594.306,766.408L591.741,764.956L590.166,760.961L588.796,760.84L591.478,753.178L589.933,750.575L594.481,750.535L595.094,745.605L599.205,748.698L602.208,750.025L609.001,748.535L609.642,746.118L612.879,745.749L616.815,743.857L617.689,744.639L621.48,743.116L623.404,740.243L626.057,739.497L634.716,743.219Z", "cx": 614.4145448063466, "cy": 756.5684731561919}, {"id": 498, "d": "M673.173,744.413L675.097,742.621L680.491,741.423L686.439,745.215L689.792,745.667L693.436,748.923L692.853,752.995L695.798,754.961L696.964,759.938L699.792,762.942L699.238,764.697L700.754,765.892L698.597,766.766L693.815,766.408L693.028,764.797L691.337,765.732L691.92,767.837L689.704,771.554L688.276,775.543L686.235,776.796L684.777,771.495L685.652,766.508L685.389,761.341L680.724,754.252L678.13,749.189L675.622,745.605Z", "cx": 687.6324341245446, "cy": 756.5028905811006}, {"id": 642, "d": "M686.235,776.796L689.85,778.923L693.67,777.069L697.343,779.04L697.518,781.995L693.582,784.474L691.133,783.391L688.859,797.05L684.106,795.873L678.217,791.777L668.683,794.409L664.66,797.258L652.764,796.671L646.554,794.923L643.405,795.74L641.072,791.107L639.585,789.134L641.481,787.231L639.469,785.806L636.932,788.366L632.209,785.053L631.568,780.325L626.64,777.616L625.736,773.935L621.334,769.362L627.836,767.163L632.734,759.155L636.553,751.044L641.51,748.535L645.008,745.934L650.023,747.266L655.213,747.328L658.974,750.27L661.744,748.412L667.721,747.266L669.733,744.413L673.173,744.413L675.622,745.605L678.13,749.189L680.724,754.252L685.389,761.341L685.652,766.508L684.777,771.495Z", "cx": 659.5472929119752, "cy": 772.1141996989942}, {"id": 440, "d": "M672.153,647.049L672.911,653.421L666.263,657.962L664.397,665.835L655.592,671.048L647.778,670.955L645.825,666.704L641.685,665.201L641.014,661.664L641.889,657.819L638.303,655.577L629.818,653.109L628.098,641.046L637.37,636.588L650.956,637.527L658.916,636.069L660.053,639.105L664.368,640.04Z", "cx": 650.9475229760795, "cy": 651.5710767614072}, {"id": 428, "d": "M678.567,619.716L682.474,623.172L683.174,630.396L685.768,639.031L677.08,644.617L672.153,647.049L664.368,640.04L660.053,639.105L658.916,636.069L650.956,637.527L637.37,636.588L628.098,641.046L628.39,630.021L632.355,620.658L639.994,615.493L646.437,626.733L652.939,626.431L654.484,614.902L661.394,612.195L664.922,614.078L671.89,619.691Z", "cx": 658.6569347563141, "cy": 629.5419393049883}, {"id": 233, "d": "M684.194,588.719L685.419,591.491L679.646,600.57L682.066,614.928L678.567,619.716L671.89,619.691L664.922,614.078L661.394,612.195L654.484,614.902L655.417,605.852L652.443,607.809L647.312,602.31L646.612,593.287L656.846,588.88L667.05,586.555L675.826,589.177Z", "cx": 666.7105909276531, "cy": 601.6367149851648}, {"id": 276, "d": "M571.944,673.092L573.81,680.006L571.565,683.614L574.51,688.376L576.521,695.468L575.88,700.002L579.204,708.29L575.588,709.642L573.46,708.159L571.419,710.622L565.588,713.096L562.585,716.271L556.695,719.044L558.124,722.806L558.999,728.09L563.11,731.082L567.687,736.399L564.83,742.043L561.914,743.59L563.081,751.471L562.322,753.502L559.786,751.044L555.908,750.677L550.106,752.833L542.963,752.325L541.826,755.486L537.715,752.162L535.295,752.833L526.607,749.148L524.945,751.756L518.064,751.675L519.084,743.054L523.166,734.667L511.504,732.384L507.684,729.124L508.151,723.637L506.518,720.8L507.451,712.186L506.081,698.606L510.95,698.606L512.991,693.658L515.003,681.424L513.516,676.836L515.09,673.949L521.854,673.208L523.37,676.213L528.852,669.463L527.015,664.26L526.636,656.317L532.758,658.177L537.948,656.031L538.065,661.451L546.258,664.707L546.17,669.627L554.421,667.032L558.97,663.223L568.095,668.693Z", "cx": 540.9811674602889, "cy": 706.4883677853785}, {"id": 100, "d": "M641.072,791.107L643.405,795.74L646.554,794.923L652.764,796.671L664.66,797.258L668.683,794.409L678.217,791.777L684.106,795.873L688.859,797.05L684.66,801.68L681.716,809.581L684.311,815.826L677.342,814.367L669.091,817.797L669.004,823.185L661.656,824.206L655.942,820.441L649.469,823.404L643.463,823.093L642.88,815.918L638.827,812.423L640.169,810.864L639.294,809.563L640.664,806.054L643.726,802.583L639.79,797.77L639.09,793.666Z", "cx": 661.6552096242956, "cy": 807.5227744012667}, {"id": 300, "d": "M670.491,885.48L669.47,888.413L657.808,889.25L657.895,887.61L648.012,885.681L649.528,881.455L653.959,884.807L660.257,884.236L666.292,884.942L666.088,886.671ZM643.463,823.093L649.469,823.404L655.942,820.441L661.656,824.206L669.004,823.185L669.091,817.797L673.027,820.679L670.52,827.407L668.596,828.622L663.668,828.314L659.441,827.298L649.644,830.088L655.242,836.064L651.131,837.783L646.641,837.801L642.355,832.326L640.839,834.664L642.647,840.977L646.7,845.893L643.638,848.171L648.157,852.968L652.152,855.958L652.268,861.763L644.775,859.04L647.166,864.269L642.035,865.339L645.096,874.265L639.731,874.402L633.084,870.012L630.052,861.867L628.623,855.033L625.474,850.266L621.305,844.317L620.78,841.333L624.541,836.207L625.008,832.758L627.661,831.225L627.807,828.422L633.113,827.462L636.203,825.117L640.577,825.335L641.918,823.459Z", "cx": 641.5891072932628, "cy": 846.5900084841537}, {"id": 792, "d": "M820.177,866.699L816.299,868.417L813.471,865.838L804.025,864.511L800.555,866.097L791.342,867.679L786.998,867.507L777.668,871.313L770.991,871.347L766.705,869.429L757.783,872.252L755.13,870.286L754.693,875.899L752.506,878.106L750.349,880.29L747.375,875.746L750.436,871.962L745.509,872.833L738.715,870.508L733.147,876.307L720.872,877.427L714.312,872.03L705.565,871.689L703.699,875.865L698.101,877.054L690.288,871.706L681.453,871.894L676.643,861.78L670.724,856.08L674.66,848.03L669.529,843.022L678.509,832.92L690.987,832.506L694.399,824.37L709.822,825.79L719.56,818.79L729.007,815.715L742.389,815.476L756.53,823.13L768.163,827.28L777.58,825.627L784.548,826.59L794.112,820.954L802.742,820.441L810.555,825.736L811.926,829.509L811.139,834.7L817.174,837.336L820.352,840.407L814.812,843.395L817.349,855.33L815.745,858.518ZM669.091,817.797L677.342,814.367L684.311,815.826L685.273,820.02L692.358,823.495L690.871,826.136L681.249,826.735L677.809,830.033L671.045,835.777L668.508,830.81L668.596,828.622L670.52,827.407L673.027,820.679Z", "cx": 741.9764375106136, "cy": 846.7106003062137}, {"id": 8, "d": "M627.807,828.422L627.661,831.225L625.008,832.758L624.541,836.207L620.78,841.333L619.38,840.603L619.235,838.284L614.745,834.718L614.045,829.654L614.716,822.326L615.823,818.955L614.453,817.245L613.928,813.775L617.427,808.37L617.952,810.437L620.139,809.469L621.859,812.423L623.783,813.535L624.337,817.485L623.317,821.174L624.454,825.808Z", "cx": 619.8085194490701, "cy": 825.0740537765406}, {"id": 191, "d": "M591.741,764.956L594.306,766.408L600.371,771.416L607.048,773.66L610.08,771.909L612.033,776.404L614.628,779.702L611.508,784.01L607.835,781.471L602.237,781.627L595.269,779.722L591.478,779.975L589.729,782.364L586.843,779.722L585.122,784.474L589.088,789.805L590.866,793.304L594.569,797.505L597.659,799.964L600.721,804.611L607.893,808.799L606.989,810.66L599.38,806.596L594.685,802.602L587.28,799.284L580.487,791.031L582.119,790.169L578.417,785.401L578.271,781.53L573.052,779.722L570.574,784.667L568.183,780.83L568.358,776.835L568.649,776.659L574.306,777.05L575.792,775.092L578.533,776.991L581.711,777.206L581.682,773.974L584.51,772.794L585.297,768.075Z", "cx": 591.753123048802, "cy": 781.9865576432456}, {"id": 756, "d": "M535.295,752.833L535.587,754.94L534.362,757.867L538.006,760.038L542.147,760.359L541.505,765.195L537.948,767.183L531.942,765.693L530.193,770.429L526.344,770.804L524.945,768.947L520.396,772.893L516.489,773.443L512.991,770.962L510.221,765.832L506.343,767.659L506.489,762.342L512.408,755.668L512.145,752.63L515.819,753.725L518.064,751.675L524.945,751.756L526.607,749.148Z", "cx": 523.3376775210395, "cy": 761.4917307986708}, {"id": 442, "d": "M506.518,720.8L508.151,723.637L507.684,729.124L505.352,729.398L503.544,728.301L504.419,721.27Z", "cx": 505.8989958598207, "cy": 725.3428587056696}, {"id": 56, "d": "M507.451,712.186L506.518,720.8L504.419,721.27L503.544,728.301L496.459,722.593L492.29,723.573L486.634,717.605L482.873,712.489L479.112,712.272L477.945,707.766L484.418,705.204L490.366,706.235L497.859,703.534L502.99,709.185Z", "cx": 494.6607719767429, "cy": 714.0600356358736}, {"id": 528, "d": "M513.516,676.836L515.003,681.424L512.991,693.658L510.95,698.606L506.081,698.606L507.451,712.186L502.99,709.185L497.859,703.534L490.366,706.235L484.418,705.204L488.587,701.638L495.701,682.132L506.781,676.444Z", "cx": 502.24960148893365, "cy": 692.5471847950643}, {"id": 620, "d": "M384.413,817.208L387.358,814.441L390.653,812.85L392.694,818.183L397.475,818.183L398.846,816.803L403.569,817.19L405.843,822.619L402.082,825.536L401.994,833.874L400.682,835.418L400.362,840.425L396.863,841.28L400.099,847.571L397.854,854.386L400.653,857.44L399.545,860.238L396.542,864.08L397.213,867.438L393.947,870.063L389.691,868.64L385.521,869.755L386.746,861.798L385.988,855.487L382.373,854.526L380.419,850.6L381.06,843.785L384.297,839.962L384.88,835.687L386.571,829.292L386.396,824.753L384.763,820.881Z", "cx": 392.361105500324, "cy": 840.7798024720951}, {"id": 724, "d": "M397.213,867.438L396.542,864.08L399.545,860.238L400.653,857.44L397.854,854.386L400.099,847.571L396.863,841.28L400.362,840.425L400.682,835.418L401.994,833.874L402.082,825.536L405.843,822.619L403.569,817.19L398.846,816.803L397.475,818.183L392.694,818.183L390.653,812.85L387.358,814.441L384.413,817.208L384.822,809.432L381.498,804.63L392.956,796.595L402.869,798.603L413.744,798.546L422.374,800.455L429.08,799.869L442.171,800.228L445.407,804.555L460.306,809.563L463.251,807.194L472.377,812.164L481.765,810.734L482.202,817.098L474.534,824.297L464.155,826.572L463.426,830.178L458.44,836.064L455.32,844.636L458.469,850.6L453.804,855.207L452.055,861.884L445.932,863.924L440.189,871.723L429.926,871.877L422.199,871.689L417.126,875.253L414.036,879.038L410.071,878.208L407.068,874.827L404.764,869.018Z", "cx": 428.3071727747772, "cy": 832.7802944844767}, {"id": 372, "d": "M407.388,671.559L408.729,681.287L402.607,693.233L388.233,700.998L376.775,699.027L383.335,685.183L379.107,671.373L390.128,660.504L396.251,653.925L397.913,661.475L396.251,668.926L401.266,668.716Z", "cx": 392.7219476809347, "cy": 680.6266902557182}, {"id": 380, "d": "M542.147,760.359L547.074,762.042L548.007,759.777L555.996,757.726L557.803,761.842L569.407,764.896L568.504,770.666L570.457,775.602L564.014,773.915L557.424,778.026L557.862,783.72L556.87,786.962L559.524,792.731L567.133,798.395L571.215,807.568L580.224,816.398L586.551,816.343L588.534,818.735L586.259,820.899L593.519,824.808L599.467,828.042L606.406,833.604L607.252,835.598L605.736,839.373L601.246,834.431L594.19,832.686L590.808,839.533L596.639,843.43L595.677,848.893L592.295,849.509L587.98,858.362L584.598,859.161L584.627,856.01L586.289,850.459L588.038,848.241L584.889,842.187L582.411,836.87L579.058,835.544L576.667,830.955L571.448,829.02L567.95,824.698L561.943,824.006L555.617,819.121L548.211,812.034L542.701,805.698L540.193,794.656L536.17,793.361L529.58,789.632L525.848,791.165L521.154,796.386L517.801,797.202L518.734,792.331L514.332,790.897L512.233,782.092L515.061,778.592L512.67,774.249L512.991,770.962L516.489,773.443L520.396,772.893L524.945,768.947L526.344,770.804L530.193,770.429L531.942,765.693L537.948,767.183L541.505,765.195ZM577.134,856.743L583.286,855.853L580.37,863.924L581.565,867.077L579.874,872.27L573.664,868.469L569.553,867.369L558.27,862.196L559.378,856.917L568.853,857.857ZM528.123,827.806L532.175,824.48L537.015,832.073L535.878,846.034L532.204,845.362L528.91,848.84L525.848,846.087L525.528,833.37L523.662,827.262Z", "cx": 555.3984690145958, "cy": 805.8216740196151}, {"id": 208, "d": "M537.948,656.031L532.758,658.177L526.636,656.317L523.341,648.431L523.108,633.613L524.449,629.645L526.781,625.195L533.896,624.261L536.753,620.124L543.255,615.853L542.992,623.603L540.601,628.442L541.563,632.592L545.966,634.805L543.983,640.31L541.563,638.735L535.732,649.109ZM557.774,639.892L560.34,647.122L555.5,658.605L547.016,650.63L545.879,644.665Z", "cx": 537.5256571314691, "cy": 640.3053094689074}, {"id": 826, "d": "M407.388,671.559L401.266,668.716L396.251,668.926L397.913,661.475L396.251,653.925L403.044,653.349L411.732,662.042ZM432.521,677.894L432.55,677.894L433.716,669.953L428.293,661.404L428.176,661.215L418.351,658.747L416.427,654.931L419.371,648.576L416.689,644.617L412.345,651.377L411.849,637.502L407.767,630.021L410.712,614.516L417.01,602.021L423.482,603.257L433.249,601.968L424.59,618.542L432.841,616.469L441.705,616.546L439.605,628.743L432.316,641.88L440.684,642.81L441.326,644.324L448.556,661.073L454.096,663.317L459.082,678.974L461.385,684.297L471.21,686.861L470.219,695.357L466.079,699.205L469.315,705.928L462.026,712.684L451.209,712.554L437.419,716.077L433.629,713.572L428.293,719.515L420.8,718.078L415.115,722.913L410.799,720.393L422.666,706.957L429.926,704.172L429.867,704.15L417.214,701.991L414.91,696.783L423.395,692.695L418.963,685.501L420.479,676.651Z", "cx": 434.0680419865903, "cy": 668.3333591335683}, {"id": 352, "d": "M340.067,463.673L338.201,476.614L347.356,489.92L336.831,504.411L313.477,517.086L306.48,520.383L295.838,517.703L273.242,511.897L281.202,503.682L263.562,494.43L277.907,490.734L277.557,485.041L260.559,480.513L266.041,467.57L278.315,464.598L290.94,478.118L303.244,467.297L313.419,472.955L326.627,462.229Z", "cx": 305.6511605588059, "cy": 490.3626184775588}, {"id": 705, "d": "M569.407,764.896L576.084,765.792L580.166,763.121L587.251,762.842L588.796,760.84L590.166,760.961L591.741,764.956L585.297,768.075L584.51,772.794L581.682,773.974L581.711,777.206L578.533,776.991L575.792,775.092L574.306,777.05L568.649,776.659L570.457,775.602L568.504,770.666Z", "cx": 578.5797390419633, "cy": 769.3549410167622}, {"id": 246, "d": "M689.15,407.762L687.955,423.397L700.346,437.835L692.882,453.657L702.3,476.681L696.848,493.331L704.137,507.381L700.842,519.368L712.825,531.686L709.764,540.656L702.241,550.635L684.923,572.081L670.228,573.388L655.971,579.353L642.793,582.775L638.099,573.888L630.256,568.506L632.063,551.938L628.127,536.294L632.005,525.913L639.352,514.513L657.866,494.236L663.26,490.213L662.444,482.005L651.16,472.686L648.449,464.872L648.216,432.716L635.591,417.826L624.774,406.841L629.643,400.808L638.653,412.801L649.207,411.698L657.895,417.111L665.622,407.148L669.616,390.23L682.182,382.217L692.562,391.62Z", "cx": 670.1037358635875, "cy": 493.9249556489703}, {"id": 703, "d": "M640.285,733.809L638.04,737.024L636.437,741.96L634.716,743.219L626.057,739.497L623.404,740.243L621.48,743.116L617.689,744.639L616.815,743.857L612.879,745.749L609.642,746.118L609.001,748.535L602.208,750.025L599.205,748.698L595.094,745.605L594.277,741.381L594.948,739.829L596.085,737.128L599.671,737.336L602.441,736.066L602.645,734.918L604.219,734.332L604.744,731.524L606.61,730.977L607.864,728.744L610.255,728.723L610.721,729.483L614.045,727.773L618.127,732.196L622.937,729.525L626.757,730.809L632.588,729.04Z", "cx": 615.6135084596293, "cy": 738.1836803114821}, {"id": 203, "d": "M579.204,708.29L583.052,712.446L589.088,713.551L588.592,717.068L592.994,719.687L594.19,716.4L599.759,717.82L600.517,721.783L606.552,722.551L610.255,728.723L607.864,728.744L606.61,730.977L604.744,731.524L604.219,734.332L602.645,734.918L602.441,736.066L599.671,737.336L596.085,737.128L594.948,739.829L591.216,737.524L587.397,738.148L581.128,734.395L578.271,735.315L573.693,740.347L567.687,736.399L563.11,731.082L558.999,728.09L558.124,722.806L556.695,719.044L562.585,716.271L565.588,713.096L571.419,710.622L573.46,708.159L575.588,709.642Z", "cx": 581.7353145591164, "cy": 725.1083909463483}, {"id": 196, "d": "M722.68,887.074L724.196,887.593L726.382,886.738L727.957,886.839L728.54,887.459L728.686,888.447L729.094,888.079L730.319,888.28L731.864,887.526L732.738,887.878L732.972,888.681L724.662,892.686L720.697,891.403L718.831,887.442Z", "cx": 725.163025168447, "cy": 889.3745454523548}, {"id": 70, "d": "M607.893,808.799L600.721,804.611L597.659,799.964L594.569,797.505L590.866,793.304L589.088,789.805L585.122,784.474L586.843,779.722L589.729,782.364L591.478,779.975L595.269,779.722L602.237,781.627L607.835,781.471L611.508,784.01L614.424,783.971L612.412,788.98L616.319,793.323L615.124,798.603L613.229,799.114L611.712,800.115L609.088,802.715Z", "cx": 601.8445078782827, "cy": 791.624503538047}, {"id": 807, "d": "M638.827,812.423L642.88,815.918L643.463,823.093L641.918,823.459L640.577,825.335L636.203,825.117L633.113,827.462L627.807,828.422L624.454,825.808L623.317,821.174L624.337,817.485L625.357,817.577L625.736,815.346L630.518,813.664L632.326,813.239L635.095,812.59Z", "cx": 633.3106653047845, "cy": 820.1680435666054}, {"id": 688, "d": "M610.08,771.909L616.29,768.848L621.334,769.362L625.736,773.935L626.64,777.616L631.568,780.325L632.209,785.053L636.932,788.366L639.469,785.806L641.481,787.231L639.585,789.134L641.072,791.107L639.09,793.666L639.79,797.77L643.726,802.583L640.664,806.054L639.294,809.563L640.169,810.864L638.827,812.423L635.095,812.59L632.326,813.239L632.063,812.423L633.025,811.106L633.929,808.426L632.792,808.501L631.218,806.447L629.877,805.923L628.827,804.161L627.311,803.485L626.145,801.906L624.687,802.527L623.579,806.203L621.655,807.007L622.296,806.054L619.206,803.748L616.552,802.564L615.386,801.02L613.229,799.114L615.124,798.603L616.319,793.323L612.412,788.98L614.424,783.971L611.508,784.01L614.628,779.702L612.033,776.404Z", "cx": 626.1212690936613, "cy": 790.8829730553712}, {"id": 499, "d": "M620.139,809.469L617.952,810.437L617.427,808.37L613.928,813.775L614.453,817.245L612.762,816.398L610.488,812.85L606.989,810.66L607.893,808.799L609.088,802.715L611.712,800.115L613.229,799.114L615.386,801.02L616.552,802.564L619.206,803.748L622.296,806.054L621.655,807.007Z", "cx": 613.7750876382846, "cy": 807.2368115183054}];
+const MAP_GRAT  = "M-1000.198,2649.168L-1000.198,2589.66L-1000.198,2266.901L-1000.198,1940.74L-1000.198,1600.369L-1000.198,1378.484L-1000.198,1191.389L-1000.198,1004.295L-1000.198,782.41L-1000.198,442.039L-1000.198,115.878L-1000.198,-206.881L-1000.198,-266.389M-919.211,2649.168L-919.211,2589.66L-919.211,2266.901L-919.211,1940.74L-919.211,1600.369L-919.211,1378.484L-919.211,1191.389L-919.211,1004.295L-919.211,782.41L-919.211,442.039L-919.211,115.878L-919.211,-206.881L-919.211,-266.389M-838.223,2649.168L-838.223,2589.66L-838.223,2266.901L-838.223,1940.74L-838.223,1600.369L-838.223,1378.484L-838.223,1191.389L-838.223,1004.295L-838.223,782.41L-838.223,442.039L-838.223,115.878L-838.223,-206.881L-838.223,-266.389M-757.235,2649.168L-757.235,2589.66L-757.235,2266.901L-757.235,1940.74L-757.235,1600.369L-757.235,1378.484L-757.235,1191.389L-757.235,1004.295L-757.235,782.41L-757.235,442.039L-757.235,115.878L-757.235,-206.881L-757.235,-266.389M-676.248,2649.168L-676.248,2589.66L-676.248,2266.901L-676.248,1940.74L-676.248,1600.369L-676.248,1378.484L-676.248,1191.389L-676.248,1004.295L-676.248,782.41L-676.248,442.039L-676.248,115.878L-676.248,-206.881L-676.248,-266.389M-595.26,2649.168L-595.26,2589.66L-595.26,2266.901L-595.26,1940.74L-595.26,1600.369L-595.26,1378.484L-595.26,1191.389L-595.26,1004.295L-595.26,782.41L-595.26,442.039L-595.26,115.878L-595.26,-206.881L-595.26,-266.389M-514.272,2649.168L-514.272,2589.66L-514.272,2266.901L-514.272,1940.74L-514.272,1600.369L-514.272,1378.484L-514.272,1191.389L-514.272,1004.295L-514.272,782.41L-514.272,442.039L-514.272,115.878L-514.272,-206.881L-514.272,-266.389M-433.284,2649.168L-433.284,2589.66L-433.284,2266.901L-433.284,1940.74L-433.284,1600.369L-433.284,1378.484L-433.284,1191.389L-433.284,1004.295L-433.284,782.41L-433.284,442.039L-433.284,115.878L-433.284,-206.881L-433.284,-266.389M-352.297,2649.168L-352.297,2589.66L-352.297,2266.901L-352.297,1940.74L-352.297,1600.369L-352.297,1378.484L-352.297,1191.389L-352.297,1004.295L-352.297,782.41L-352.297,442.039L-352.297,115.878L-352.297,-206.881L-352.297,-266.389M-271.309,2649.168L-271.309,2589.66L-271.309,2266.901L-271.309,1940.74L-271.309,1600.369L-271.309,1378.484L-271.309,1191.389L-271.309,1004.295L-271.309,782.41L-271.309,442.039L-271.309,115.878L-271.309,-206.881L-271.309,-266.389M-190.321,2649.168L-190.321,2589.66L-190.321,2266.901L-190.321,1940.74L-190.321,1600.369L-190.321,1378.484L-190.321,1191.389L-190.321,1004.295L-190.321,782.41L-190.321,442.039L-190.321,115.878L-190.321,-206.881L-190.321,-266.389M-109.334,2649.168L-109.334,2589.66L-109.334,2266.901L-109.334,1940.74L-109.334,1600.369L-109.334,1378.484L-109.334,1191.389L-109.334,1004.295L-109.334,782.41L-109.334,442.039L-109.334,115.878L-109.334,-206.881L-109.334,-266.389M-28.346,2649.168L-28.346,2589.66L-28.346,2266.901L-28.346,1940.74L-28.346,1600.369L-28.346,1378.484L-28.346,1191.389L-28.346,1004.295L-28.346,782.41L-28.346,442.039L-28.346,115.878L-28.346,-206.881L-28.346,-266.389M52.642,2649.168L52.642,2589.66L52.642,2266.901L52.642,1940.74L52.642,1600.369L52.642,1378.484L52.642,1191.389L52.642,1004.295L52.642,782.41L52.642,442.039L52.642,115.878L52.642,-206.881L52.642,-266.389M133.629,2649.168L133.629,2589.66L133.629,2266.901L133.629,1940.74L133.629,1600.369L133.629,1378.484L133.629,1191.389L133.629,1004.295L133.629,782.41L133.629,442.039L133.629,115.878L133.629,-206.881L133.629,-266.389M214.617,2649.168L214.617,2589.66L214.617,2266.901L214.617,1940.74L214.617,1600.369L214.617,1378.484L214.617,1191.389L214.617,1004.295L214.617,782.41L214.617,442.039L214.617,115.878L214.617,-206.881L214.617,-266.389M295.605,2649.168L295.605,2589.66L295.605,2266.901L295.605,1940.74L295.605,1600.369L295.605,1378.484L295.605,1191.389L295.605,1004.295L295.605,782.41L295.605,442.039L295.605,115.878L295.605,-206.881L295.605,-266.389M376.592,2649.168L376.592,2589.66L376.592,2266.901L376.592,1940.74L376.592,1600.369L376.592,1378.484L376.592,1191.389L376.592,1004.295L376.592,782.41L376.592,442.039L376.592,115.878L376.592,-206.881L376.592,-266.389M457.58,2649.168L457.58,2589.66L457.58,2266.901L457.58,1940.74L457.58,1600.369L457.58,1378.484L457.58,1191.389L457.58,1004.295L457.58,782.41L457.58,442.039L457.58,115.878L457.58,-206.881L457.58,-266.389M538.568,2649.168L538.568,2589.66L538.568,2266.901L538.568,1940.74L538.568,1600.369L538.568,1378.484L538.568,1191.389L538.568,1004.295L538.568,782.41L538.568,442.039L538.568,115.878L538.568,-206.881L538.568,-266.389M619.555,2649.168L619.555,2589.66L619.555,2266.901L619.555,1940.74L619.555,1600.369L619.555,1378.484L619.555,1191.389L619.555,1004.295L619.555,782.41L619.555,442.039L619.555,115.878L619.555,-206.881L619.555,-266.389M700.543,2649.168L700.543,2589.66L700.543,2266.901L700.543,1940.74L700.543,1600.369L700.543,1378.484L700.543,1191.389L700.543,1004.295L700.543,782.41L700.543,442.039L700.543,115.878L700.543,-206.881L700.543,-266.389M781.531,2649.168L781.531,2589.66L781.531,2266.901L781.531,1940.74L781.531,1600.369L781.531,1378.484L781.531,1191.389L781.531,1004.295L781.531,782.41L781.531,442.039L781.531,115.878L781.531,-206.881L781.531,-266.389M862.518,2649.168L862.518,2589.66L862.518,2266.901L862.518,1940.74L862.518,1600.369L862.518,1378.484L862.518,1191.389L862.518,1004.295L862.518,782.41L862.518,442.039L862.518,115.878L862.518,-206.881L862.518,-266.389M943.506,2649.168L943.506,2589.66L943.506,2266.901L943.506,1940.74L943.506,1600.369L943.506,1378.484L943.506,1191.389L943.506,1004.295L943.506,782.41L943.506,442.039L943.506,115.878L943.506,-206.881L943.506,-266.389M1024.494,2649.168L1024.494,2589.66L1024.494,2266.901L1024.494,1940.74L1024.494,1600.369L1024.494,1378.484L1024.494,1191.389L1024.494,1004.295L1024.494,782.41L1024.494,442.039L1024.494,115.878L1024.494,-206.881L1024.494,-266.389M1105.482,2649.168L1105.482,2589.66L1105.482,2266.901L1105.482,1940.74L1105.482,1600.369L1105.482,1378.484L1105.482,1191.389L1105.482,1004.295L1105.482,782.41L1105.482,442.039L1105.482,115.878L1105.482,-206.881L1105.482,-266.389M1186.469,2649.168L1186.469,2589.66L1186.469,2266.901L1186.469,1940.74L1186.469,1600.369L1186.469,1378.484L1186.469,1191.389L1186.469,1004.295L1186.469,782.41L1186.469,442.039L1186.469,115.878L1186.469,-206.881L1186.469,-266.389M1267.457,2649.168L1267.457,2589.66L1267.457,2266.901L1267.457,1940.74L1267.457,1600.369L1267.457,1378.484L1267.457,1191.389L1267.457,1004.295L1267.457,782.41L1267.457,442.039L1267.457,115.878L1267.457,-206.881L1267.457,-266.389M1348.445,2649.168L1348.445,2589.66L1348.445,2266.901L1348.445,1940.74L1348.445,1600.369L1348.445,1378.484L1348.445,1191.389L1348.445,1004.295L1348.445,782.41L1348.445,442.039L1348.445,115.878L1348.445,-206.881L1348.445,-266.389M1429.432,2649.168L1429.432,2589.66L1429.432,2266.901L1429.432,1940.74L1429.432,1600.369L1429.432,1378.484L1429.432,1191.389L1429.432,1004.295L1429.432,782.41L1429.432,442.039L1429.432,115.878L1429.432,-206.881L1429.432,-266.389M1510.42,2649.168L1510.42,2589.66L1510.42,2266.901L1510.42,1940.74L1510.42,1600.369L1510.42,1378.484L1510.42,1191.389L1510.42,1004.295L1510.42,782.41L1510.42,442.039L1510.42,115.878L1510.42,-206.881L1510.42,-266.389M1591.408,2649.168L1591.408,2589.66L1591.408,2266.901L1591.408,1940.74L1591.408,1600.369L1591.408,1378.484L1591.408,1191.389L1591.408,1004.295L1591.408,782.41L1591.408,442.039L1591.408,115.878L1591.408,-206.881L1591.408,-266.389M1672.395,2649.168L1672.395,2589.66L1672.395,2266.901L1672.395,1940.74L1672.395,1600.369L1672.395,1378.484L1672.395,1191.389L1672.395,1004.295L1672.395,782.41L1672.395,442.039L1672.395,115.878L1672.395,-206.881L1672.395,-266.389M1753.383,2649.168L1753.383,2589.66L1753.383,2266.901L1753.383,1940.74L1753.383,1600.369L1753.383,1378.484L1753.383,1191.389L1753.383,1004.295L1753.383,782.41L1753.383,442.039L1753.383,115.878L1753.383,-206.881L1753.383,-266.389M1834.371,2649.168L1834.371,2589.66L1834.371,2266.901L1834.371,1940.74L1834.371,1600.369L1834.371,1378.484L1834.371,1191.389L1834.371,1004.295L1834.371,782.41L1834.371,442.039L1834.371,115.878L1834.371,-206.881L1834.371,-266.389M-1000.198,2321.869L-979.951,2321.869L-959.704,2321.869L-939.458,2321.869L-919.211,2321.869L-898.964,2321.869L-878.717,2321.869L-858.47,2321.869L-838.223,2321.869L-817.976,2321.869L-797.729,2321.869L-777.482,2321.869L-757.235,2321.869L-736.988,2321.869L-716.741,2321.869L-696.494,2321.869L-676.248,2321.869L-656.001,2321.869L-635.754,2321.869L-615.507,2321.869L-595.26,2321.869L-575.013,2321.869L-554.766,2321.869L-534.519,2321.869L-514.272,2321.869L-494.025,2321.869L-473.778,2321.869L-453.531,2321.869L-433.284,2321.869L-413.038,2321.869L-392.791,2321.869L-372.544,2321.869L-352.297,2321.869L-332.05,2321.869L-311.803,2321.869L-291.556,2321.869L-271.309,2321.869L-251.062,2321.869L-230.815,2321.869L-210.568,2321.869L-190.321,2321.869L-170.075,2321.869L-149.828,2321.869L-129.581,2321.869L-109.334,2321.869L-89.087,2321.869L-68.84,2321.869L-48.593,2321.869L-28.346,2321.869L-8.099,2321.869L12.148,2321.869L32.395,2321.869L52.642,2321.869L72.889,2321.869L93.135,2321.869L113.382,2321.869L133.629,2321.869L153.876,2321.869L174.123,2321.869L194.37,2321.869L214.617,2321.869L234.864,2321.869L255.111,2321.869L275.358,2321.869L295.605,2321.869L315.852,2321.869L336.099,2321.869L356.345,2321.869L376.592,2321.869L396.839,2321.869L417.086,2321.869L437.333,2321.869L457.58,2321.869L477.827,2321.869L498.074,2321.869L518.321,2321.869L538.568,2321.869L558.815,2321.869L579.062,2321.869L599.308,2321.869L619.555,2321.869L639.802,2321.869L660.049,2321.869L680.296,2321.869L700.543,2321.869L720.79,2321.869L741.037,2321.869L761.284,2321.869L781.531,2321.869L801.778,2321.869L822.025,2321.869L842.272,2321.869L862.518,2321.869L882.765,2321.869L903.012,2321.869L923.259,2321.869L943.506,2321.869L963.753,2321.869L984,2321.869L1004.247,2321.869L1024.494,2321.869L1044.741,2321.869L1064.988,2321.869L1085.235,2321.869L1105.482,2321.869L1125.728,2321.869L1145.975,2321.869L1166.222,2321.869L1186.469,2321.869L1206.716,2321.869L1226.963,2321.869L1247.21,2321.869L1267.457,2321.869L1287.704,2321.869L1307.951,2321.869L1328.198,2321.869L1348.445,2321.869L1368.692,2321.869L1388.938,2321.869L1409.185,2321.869L1429.432,2321.869L1449.679,2321.869L1469.926,2321.869L1490.173,2321.869L1510.42,2321.869L1530.667,2321.869L1550.914,2321.869L1571.161,2321.869L1591.408,2321.869L1611.655,2321.869L1631.901,2321.869L1652.148,2321.869L1672.395,2321.869L1692.642,2321.869L1712.889,2321.869L1733.136,2321.869L1753.383,2321.869L1773.63,2321.869L1793.877,2321.869L1814.124,2321.869L1834.371,2321.869L1854.618,2321.869L1874.865,2321.869L1895.111,2321.869L1915.358,2321.869M-1000.198,1996.666L-979.951,1996.666L-959.704,1996.666L-939.458,1996.666L-919.211,1996.666L-898.964,1996.666L-878.717,1996.666L-858.47,1996.666L-838.223,1996.666L-817.976,1996.666L-797.729,1996.666L-777.482,1996.666L-757.235,1996.666L-736.988,1996.666L-716.741,1996.666L-696.494,1996.666L-676.248,1996.666L-656.001,1996.666L-635.754,1996.666L-615.507,1996.666L-595.26,1996.666L-575.013,1996.666L-554.766,1996.666L-534.519,1996.666L-514.272,1996.666L-494.025,1996.666L-473.778,1996.666L-453.531,1996.666L-433.284,1996.666L-413.038,1996.666L-392.791,1996.666L-372.544,1996.666L-352.297,1996.666L-332.05,1996.666L-311.803,1996.666L-291.556,1996.666L-271.309,1996.666L-251.062,1996.666L-230.815,1996.666L-210.568,1996.666L-190.321,1996.666L-170.075,1996.666L-149.828,1996.666L-129.581,1996.666L-109.334,1996.666L-89.087,1996.666L-68.84,1996.666L-48.593,1996.666L-28.346,1996.666L-8.099,1996.666L12.148,1996.666L32.395,1996.666L52.642,1996.666L72.889,1996.666L93.135,1996.666L113.382,1996.666L133.629,1996.666L153.876,1996.666L174.123,1996.666L194.37,1996.666L214.617,1996.666L234.864,1996.666L255.111,1996.666L275.358,1996.666L295.605,1996.666L315.852,1996.666L336.099,1996.666L356.345,1996.666L376.592,1996.666L396.839,1996.666L417.086,1996.666L437.333,1996.666L457.58,1996.666L477.827,1996.666L498.074,1996.666L518.321,1996.666L538.568,1996.666L558.815,1996.666L579.062,1996.666L599.308,1996.666L619.555,1996.666L639.802,1996.666L660.049,1996.666L680.296,1996.666L700.543,1996.666L720.79,1996.666L741.037,1996.666L761.284,1996.666L781.531,1996.666L801.778,1996.666L822.025,1996.666L842.272,1996.666L862.518,1996.666L882.765,1996.666L903.012,1996.666L923.259,1996.666L943.506,1996.666L963.753,1996.666L984,1996.666L1004.247,1996.666L1024.494,1996.666L1044.741,1996.666L1064.988,1996.666L1085.235,1996.666L1105.482,1996.666L1125.728,1996.666L1145.975,1996.666L1166.222,1996.666L1186.469,1996.666L1206.716,1996.666L1226.963,1996.666L1247.21,1996.666L1267.457,1996.666L1287.704,1996.666L1307.951,1996.666L1328.198,1996.666L1348.445,1996.666L1368.692,1996.666L1388.938,1996.666L1409.185,1996.666L1429.432,1996.666L1449.679,1996.666L1469.926,1996.666L1490.173,1996.666L1510.42,1996.666L1530.667,1996.666L1550.914,1996.666L1571.161,1996.666L1591.408,1996.666L1611.655,1996.666L1631.901,1996.666L1652.148,1996.666L1672.395,1996.666L1692.642,1996.666L1712.889,1996.666L1733.136,1996.666L1753.383,1996.666L1773.63,1996.666L1793.877,1996.666L1814.124,1996.666L1834.371,1996.666L1854.618,1996.666L1874.865,1996.666L1895.111,1996.666L1915.358,1996.666M-1000.198,1802.491L-979.951,1802.491L-959.704,1802.491L-939.458,1802.491L-919.211,1802.491L-898.964,1802.491L-878.717,1802.491L-858.47,1802.491L-838.223,1802.491L-817.976,1802.491L-797.729,1802.491L-777.482,1802.491L-757.235,1802.491L-736.988,1802.491L-716.741,1802.491L-696.494,1802.491L-676.248,1802.491L-656.001,1802.491L-635.754,1802.491L-615.507,1802.491L-595.26,1802.491L-575.013,1802.491L-554.766,1802.491L-534.519,1802.491L-514.272,1802.491L-494.025,1802.491L-473.778,1802.491L-453.531,1802.491L-433.284,1802.491L-413.038,1802.491L-392.791,1802.491L-372.544,1802.491L-352.297,1802.491L-332.05,1802.491L-311.803,1802.491L-291.556,1802.491L-271.309,1802.491L-251.062,1802.491L-230.815,1802.491L-210.568,1802.491L-190.321,1802.491L-170.075,1802.491L-149.828,1802.491L-129.581,1802.491L-109.334,1802.491L-89.087,1802.491L-68.84,1802.491L-48.593,1802.491L-28.346,1802.491L-8.099,1802.491L12.148,1802.491L32.395,1802.491L52.642,1802.491L72.889,1802.491L93.135,1802.491L113.382,1802.491L133.629,1802.491L153.876,1802.491L174.123,1802.491L194.37,1802.491L214.617,1802.491L234.864,1802.491L255.111,1802.491L275.358,1802.491L295.605,1802.491L315.852,1802.491L336.099,1802.491L356.345,1802.491L376.592,1802.491L396.839,1802.491L417.086,1802.491L437.333,1802.491L457.58,1802.491L477.827,1802.491L498.074,1802.491L518.321,1802.491L538.568,1802.491L558.815,1802.491L579.062,1802.491L599.308,1802.491L619.555,1802.491L639.802,1802.491L660.049,1802.491L680.296,1802.491L700.543,1802.491L720.79,1802.491L741.037,1802.491L761.284,1802.491L781.531,1802.491L801.778,1802.491L822.025,1802.491L842.272,1802.491L862.518,1802.491L882.765,1802.491L903.012,1802.491L923.259,1802.491L943.506,1802.491L963.753,1802.491L984,1802.491L1004.247,1802.491L1024.494,1802.491L1044.741,1802.491L1064.988,1802.491L1085.235,1802.491L1105.482,1802.491L1125.728,1802.491L1145.975,1802.491L1166.222,1802.491L1186.469,1802.491L1206.716,1802.491L1226.963,1802.491L1247.21,1802.491L1267.457,1802.491L1287.704,1802.491L1307.951,1802.491L1328.198,1802.491L1348.445,1802.491L1368.692,1802.491L1388.938,1802.491L1409.185,1802.491L1429.432,1802.491L1449.679,1802.491L1469.926,1802.491L1490.173,1802.491L1510.42,1802.491L1530.667,1802.491L1550.914,1802.491L1571.161,1802.491L1591.408,1802.491L1611.655,1802.491L1631.901,1802.491L1652.148,1802.491L1672.395,1802.491L1692.642,1802.491L1712.889,1802.491L1733.136,1802.491L1753.383,1802.491L1773.63,1802.491L1793.877,1802.491L1814.124,1802.491L1834.371,1802.491L1854.618,1802.491L1874.865,1802.491L1895.111,1802.491L1915.358,1802.491M-1000.198,1660.372L-979.951,1660.372L-959.704,1660.372L-939.458,1660.372L-919.211,1660.372L-898.964,1660.372L-878.717,1660.372L-858.47,1660.372L-838.223,1660.372L-817.976,1660.372L-797.729,1660.372L-777.482,1660.372L-757.235,1660.372L-736.988,1660.372L-716.741,1660.372L-696.494,1660.372L-676.248,1660.372L-656.001,1660.372L-635.754,1660.372L-615.507,1660.372L-595.26,1660.372L-575.013,1660.372L-554.766,1660.372L-534.519,1660.372L-514.272,1660.372L-494.025,1660.372L-473.778,1660.372L-453.531,1660.372L-433.284,1660.372L-413.038,1660.372L-392.791,1660.372L-372.544,1660.372L-352.297,1660.372L-332.05,1660.372L-311.803,1660.372L-291.556,1660.372L-271.309,1660.372L-251.062,1660.372L-230.815,1660.372L-210.568,1660.372L-190.321,1660.372L-170.075,1660.372L-149.828,1660.372L-129.581,1660.372L-109.334,1660.372L-89.087,1660.372L-68.84,1660.372L-48.593,1660.372L-28.346,1660.372L-8.099,1660.372L12.148,1660.372L32.395,1660.372L52.642,1660.372L72.889,1660.372L93.135,1660.372L113.382,1660.372L133.629,1660.372L153.876,1660.372L174.123,1660.372L194.37,1660.372L214.617,1660.372L234.864,1660.372L255.111,1660.372L275.358,1660.372L295.605,1660.372L315.852,1660.372L336.099,1660.372L356.345,1660.372L376.592,1660.372L396.839,1660.372L417.086,1660.372L437.333,1660.372L457.58,1660.372L477.827,1660.372L498.074,1660.372L518.321,1660.372L538.568,1660.372L558.815,1660.372L579.062,1660.372L599.308,1660.372L619.555,1660.372L639.802,1660.372L660.049,1660.372L680.296,1660.372L700.543,1660.372L720.79,1660.372L741.037,1660.372L761.284,1660.372L781.531,1660.372L801.778,1660.372L822.025,1660.372L842.272,1660.372L862.518,1660.372L882.765,1660.372L903.012,1660.372L923.259,1660.372L943.506,1660.372L963.753,1660.372L984,1660.372L1004.247,1660.372L1024.494,1660.372L1044.741,1660.372L1064.988,1660.372L1085.235,1660.372L1105.482,1660.372L1125.728,1660.372L1145.975,1660.372L1166.222,1660.372L1186.469,1660.372L1206.716,1660.372L1226.963,1660.372L1247.21,1660.372L1267.457,1660.372L1287.704,1660.372L1307.951,1660.372L1328.198,1660.372L1348.445,1660.372L1368.692,1660.372L1388.938,1660.372L1409.185,1660.372L1429.432,1660.372L1449.679,1660.372L1469.926,1660.372L1490.173,1660.372L1510.42,1660.372L1530.667,1660.372L1550.914,1660.372L1571.161,1660.372L1591.408,1660.372L1611.655,1660.372L1631.901,1660.372L1652.148,1660.372L1672.395,1660.372L1692.642,1660.372L1712.889,1660.372L1733.136,1660.372L1753.383,1660.372L1773.63,1660.372L1793.877,1660.372L1814.124,1660.372L1834.371,1660.372L1854.618,1660.372L1874.865,1660.372L1895.111,1660.372L1915.358,1660.372M-1000.198,1545.399L-979.951,1545.399L-959.704,1545.399L-939.458,1545.399L-919.211,1545.399L-898.964,1545.399L-878.717,1545.399L-858.47,1545.399L-838.223,1545.399L-817.976,1545.399L-797.729,1545.399L-777.482,1545.399L-757.235,1545.399L-736.988,1545.399L-716.741,1545.399L-696.494,1545.399L-676.248,1545.399L-656.001,1545.399L-635.754,1545.399L-615.507,1545.399L-595.26,1545.399L-575.013,1545.399L-554.766,1545.399L-534.519,1545.399L-514.272,1545.399L-494.025,1545.399L-473.778,1545.399L-453.531,1545.399L-433.284,1545.399L-413.038,1545.399L-392.791,1545.399L-372.544,1545.399L-352.297,1545.399L-332.05,1545.399L-311.803,1545.399L-291.556,1545.399L-271.309,1545.399L-251.062,1545.399L-230.815,1545.399L-210.568,1545.399L-190.321,1545.399L-170.075,1545.399L-149.828,1545.399L-129.581,1545.399L-109.334,1545.399L-89.087,1545.399L-68.84,1545.399L-48.593,1545.399L-28.346,1545.399L-8.099,1545.399L12.148,1545.399L32.395,1545.399L52.642,1545.399L72.889,1545.399L93.135,1545.399L113.382,1545.399L133.629,1545.399L153.876,1545.399L174.123,1545.399L194.37,1545.399L214.617,1545.399L234.864,1545.399L255.111,1545.399L275.358,1545.399L295.605,1545.399L315.852,1545.399L336.099,1545.399L356.345,1545.399L376.592,1545.399L396.839,1545.399L417.086,1545.399L437.333,1545.399L457.58,1545.399L477.827,1545.399L498.074,1545.399L518.321,1545.399L538.568,1545.399L558.815,1545.399L579.062,1545.399L599.308,1545.399L619.555,1545.399L639.802,1545.399L660.049,1545.399L680.296,1545.399L700.543,1545.399L720.79,1545.399L741.037,1545.399L761.284,1545.399L781.531,1545.399L801.778,1545.399L822.025,1545.399L842.272,1545.399L862.518,1545.399L882.765,1545.399L903.012,1545.399L923.259,1545.399L943.506,1545.399L963.753,1545.399L984,1545.399L1004.247,1545.399L1024.494,1545.399L1044.741,1545.399L1064.988,1545.399L1085.235,1545.399L1105.482,1545.399L1125.728,1545.399L1145.975,1545.399L1166.222,1545.399L1186.469,1545.399L1206.716,1545.399L1226.963,1545.399L1247.21,1545.399L1267.457,1545.399L1287.704,1545.399L1307.951,1545.399L1328.198,1545.399L1348.445,1545.399L1368.692,1545.399L1388.938,1545.399L1409.185,1545.399L1429.432,1545.399L1449.679,1545.399L1469.926,1545.399L1490.173,1545.399L1510.42,1545.399L1530.667,1545.399L1550.914,1545.399L1571.161,1545.399L1591.408,1545.399L1611.655,1545.399L1631.901,1545.399L1652.148,1545.399L1672.395,1545.399L1692.642,1545.399L1712.889,1545.399L1733.136,1545.399L1753.383,1545.399L1773.63,1545.399L1793.877,1545.399L1814.124,1545.399L1834.371,1545.399L1854.618,1545.399L1874.865,1545.399L1895.111,1545.399L1915.358,1545.399M-1000.198,1446.281L-979.951,1446.281L-959.704,1446.281L-939.458,1446.281L-919.211,1446.281L-898.964,1446.281L-878.717,1446.281L-858.47,1446.281L-838.223,1446.281L-817.976,1446.281L-797.729,1446.281L-777.482,1446.281L-757.235,1446.281L-736.988,1446.281L-716.741,1446.281L-696.494,1446.281L-676.248,1446.281L-656.001,1446.281L-635.754,1446.281L-615.507,1446.281L-595.26,1446.281L-575.013,1446.281L-554.766,1446.281L-534.519,1446.281L-514.272,1446.281L-494.025,1446.281L-473.778,1446.281L-453.531,1446.281L-433.284,1446.281L-413.038,1446.281L-392.791,1446.281L-372.544,1446.281L-352.297,1446.281L-332.05,1446.281L-311.803,1446.281L-291.556,1446.281L-271.309,1446.281L-251.062,1446.281L-230.815,1446.281L-210.568,1446.281L-190.321,1446.281L-170.075,1446.281L-149.828,1446.281L-129.581,1446.281L-109.334,1446.281L-89.087,1446.281L-68.84,1446.281L-48.593,1446.281L-28.346,1446.281L-8.099,1446.281L12.148,1446.281L32.395,1446.281L52.642,1446.281L72.889,1446.281L93.135,1446.281L113.382,1446.281L133.629,1446.281L153.876,1446.281L174.123,1446.281L194.37,1446.281L214.617,1446.281L234.864,1446.281L255.111,1446.281L275.358,1446.281L295.605,1446.281L315.852,1446.281L336.099,1446.281L356.345,1446.281L376.592,1446.281L396.839,1446.281L417.086,1446.281L437.333,1446.281L457.58,1446.281L477.827,1446.281L498.074,1446.281L518.321,1446.281L538.568,1446.281L558.815,1446.281L579.062,1446.281L599.308,1446.281L619.555,1446.281L639.802,1446.281L660.049,1446.281L680.296,1446.281L700.543,1446.281L720.79,1446.281L741.037,1446.281L761.284,1446.281L781.531,1446.281L801.778,1446.281L822.025,1446.281L842.272,1446.281L862.518,1446.281L882.765,1446.281L903.012,1446.281L923.259,1446.281L943.506,1446.281L963.753,1446.281L984,1446.281L1004.247,1446.281L1024.494,1446.281L1044.741,1446.281L1064.988,1446.281L1085.235,1446.281L1105.482,1446.281L1125.728,1446.281L1145.975,1446.281L1166.222,1446.281L1186.469,1446.281L1206.716,1446.281L1226.963,1446.281L1247.21,1446.281L1267.457,1446.281L1287.704,1446.281L1307.951,1446.281L1328.198,1446.281L1348.445,1446.281L1368.692,1446.281L1388.938,1446.281L1409.185,1446.281L1429.432,1446.281L1449.679,1446.281L1469.926,1446.281L1490.173,1446.281L1510.42,1446.281L1530.667,1446.281L1550.914,1446.281L1571.161,1446.281L1591.408,1446.281L1611.655,1446.281L1631.901,1446.281L1652.148,1446.281L1672.395,1446.281L1692.642,1446.281L1712.889,1446.281L1733.136,1446.281L1753.383,1446.281L1773.63,1446.281L1793.877,1446.281L1814.124,1446.281L1834.371,1446.281L1854.618,1446.281L1874.865,1446.281L1895.111,1446.281L1915.358,1446.281M-1000.198,1356.758L-979.951,1356.758L-959.704,1356.758L-939.458,1356.758L-919.211,1356.758L-898.964,1356.758L-878.717,1356.758L-858.47,1356.758L-838.223,1356.758L-817.976,1356.758L-797.729,1356.758L-777.482,1356.758L-757.235,1356.758L-736.988,1356.758L-716.741,1356.758L-696.494,1356.758L-676.248,1356.758L-656.001,1356.758L-635.754,1356.758L-615.507,1356.758L-595.26,1356.758L-575.013,1356.758L-554.766,1356.758L-534.519,1356.758L-514.272,1356.758L-494.025,1356.758L-473.778,1356.758L-453.531,1356.758L-433.284,1356.758L-413.038,1356.758L-392.791,1356.758L-372.544,1356.758L-352.297,1356.758L-332.05,1356.758L-311.803,1356.758L-291.556,1356.758L-271.309,1356.758L-251.062,1356.758L-230.815,1356.758L-210.568,1356.758L-190.321,1356.758L-170.075,1356.758L-149.828,1356.758L-129.581,1356.758L-109.334,1356.758L-89.087,1356.758L-68.84,1356.758L-48.593,1356.758L-28.346,1356.758L-8.099,1356.758L12.148,1356.758L32.395,1356.758L52.642,1356.758L72.889,1356.758L93.135,1356.758L113.382,1356.758L133.629,1356.758L153.876,1356.758L174.123,1356.758L194.37,1356.758L214.617,1356.758L234.864,1356.758L255.111,1356.758L275.358,1356.758L295.605,1356.758L315.852,1356.758L336.099,1356.758L356.345,1356.758L376.592,1356.758L396.839,1356.758L417.086,1356.758L437.333,1356.758L457.58,1356.758L477.827,1356.758L498.074,1356.758L518.321,1356.758L538.568,1356.758L558.815,1356.758L579.062,1356.758L599.308,1356.758L619.555,1356.758L639.802,1356.758L660.049,1356.758L680.296,1356.758L700.543,1356.758L720.79,1356.758L741.037,1356.758L761.284,1356.758L781.531,1356.758L801.778,1356.758L822.025,1356.758L842.272,1356.758L862.518,1356.758L882.765,1356.758L903.012,1356.758L923.259,1356.758L943.506,1356.758L963.753,1356.758L984,1356.758L1004.247,1356.758L1024.494,1356.758L1044.741,1356.758L1064.988,1356.758L1085.235,1356.758L1105.482,1356.758L1125.728,1356.758L1145.975,1356.758L1166.222,1356.758L1186.469,1356.758L1206.716,1356.758L1226.963,1356.758L1247.21,1356.758L1267.457,1356.758L1287.704,1356.758L1307.951,1356.758L1328.198,1356.758L1348.445,1356.758L1368.692,1356.758L1388.938,1356.758L1409.185,1356.758L1429.432,1356.758L1449.679,1356.758L1469.926,1356.758L1490.173,1356.758L1510.42,1356.758L1530.667,1356.758L1550.914,1356.758L1571.161,1356.758L1591.408,1356.758L1611.655,1356.758L1631.901,1356.758L1652.148,1356.758L1672.395,1356.758L1692.642,1356.758L1712.889,1356.758L1733.136,1356.758L1753.383,1356.758L1773.63,1356.758L1793.877,1356.758L1814.124,1356.758L1834.371,1356.758L1854.618,1356.758L1874.865,1356.758L1895.111,1356.758L1915.358,1356.758M-1000.198,1272.791L-979.951,1272.791L-959.704,1272.791L-939.458,1272.791L-919.211,1272.791L-898.964,1272.791L-878.717,1272.791L-858.47,1272.791L-838.223,1272.791L-817.976,1272.791L-797.729,1272.791L-777.482,1272.791L-757.235,1272.791L-736.988,1272.791L-716.741,1272.791L-696.494,1272.791L-676.248,1272.791L-656.001,1272.791L-635.754,1272.791L-615.507,1272.791L-595.26,1272.791L-575.013,1272.791L-554.766,1272.791L-534.519,1272.791L-514.272,1272.791L-494.025,1272.791L-473.778,1272.791L-453.531,1272.791L-433.284,1272.791L-413.038,1272.791L-392.791,1272.791L-372.544,1272.791L-352.297,1272.791L-332.05,1272.791L-311.803,1272.791L-291.556,1272.791L-271.309,1272.791L-251.062,1272.791L-230.815,1272.791L-210.568,1272.791L-190.321,1272.791L-170.075,1272.791L-149.828,1272.791L-129.581,1272.791L-109.334,1272.791L-89.087,1272.791L-68.84,1272.791L-48.593,1272.791L-28.346,1272.791L-8.099,1272.791L12.148,1272.791L32.395,1272.791L52.642,1272.791L72.889,1272.791L93.135,1272.791L113.382,1272.791L133.629,1272.791L153.876,1272.791L174.123,1272.791L194.37,1272.791L214.617,1272.791L234.864,1272.791L255.111,1272.791L275.358,1272.791L295.605,1272.791L315.852,1272.791L336.099,1272.791L356.345,1272.791L376.592,1272.791L396.839,1272.791L417.086,1272.791L437.333,1272.791L457.58,1272.791L477.827,1272.791L498.074,1272.791L518.321,1272.791L538.568,1272.791L558.815,1272.791L579.062,1272.791L599.308,1272.791L619.555,1272.791L639.802,1272.791L660.049,1272.791L680.296,1272.791L700.543,1272.791L720.79,1272.791L741.037,1272.791L761.284,1272.791L781.531,1272.791L801.778,1272.791L822.025,1272.791L842.272,1272.791L862.518,1272.791L882.765,1272.791L903.012,1272.791L923.259,1272.791L943.506,1272.791L963.753,1272.791L984,1272.791L1004.247,1272.791L1024.494,1272.791L1044.741,1272.791L1064.988,1272.791L1085.235,1272.791L1105.482,1272.791L1125.728,1272.791L1145.975,1272.791L1166.222,1272.791L1186.469,1272.791L1206.716,1272.791L1226.963,1272.791L1247.21,1272.791L1267.457,1272.791L1287.704,1272.791L1307.951,1272.791L1328.198,1272.791L1348.445,1272.791L1368.692,1272.791L1388.938,1272.791L1409.185,1272.791L1429.432,1272.791L1449.679,1272.791L1469.926,1272.791L1490.173,1272.791L1510.42,1272.791L1530.667,1272.791L1550.914,1272.791L1571.161,1272.791L1591.408,1272.791L1611.655,1272.791L1631.901,1272.791L1652.148,1272.791L1672.395,1272.791L1692.642,1272.791L1712.889,1272.791L1733.136,1272.791L1753.383,1272.791L1773.63,1272.791L1793.877,1272.791L1814.124,1272.791L1834.371,1272.791L1854.618,1272.791L1874.865,1272.791L1895.111,1272.791L1915.358,1272.791M-1000.198,1191.389L-979.951,1191.389L-959.704,1191.389L-939.458,1191.389L-919.211,1191.389L-898.964,1191.389L-878.717,1191.389L-858.47,1191.389L-838.223,1191.389L-817.976,1191.389L-797.729,1191.389L-777.482,1191.389L-757.235,1191.389L-736.988,1191.389L-716.741,1191.389L-696.494,1191.389L-676.248,1191.389L-656.001,1191.389L-635.754,1191.389L-615.507,1191.389L-595.26,1191.389L-575.013,1191.389L-554.766,1191.389L-534.519,1191.389L-514.272,1191.389L-494.025,1191.389L-473.778,1191.389L-453.531,1191.389L-433.284,1191.389L-413.038,1191.389L-392.791,1191.389L-372.544,1191.389L-352.297,1191.389L-332.05,1191.389L-311.803,1191.389L-291.556,1191.389L-271.309,1191.389L-251.062,1191.389L-230.815,1191.389L-210.568,1191.389L-190.321,1191.389L-170.075,1191.389L-149.828,1191.389L-129.581,1191.389L-109.334,1191.389L-89.087,1191.389L-68.84,1191.389L-48.593,1191.389L-28.346,1191.389L-8.099,1191.389L12.148,1191.389L32.395,1191.389L52.642,1191.389L72.889,1191.389L93.135,1191.389L113.382,1191.389L133.629,1191.389L153.876,1191.389L174.123,1191.389L194.37,1191.389L214.617,1191.389L234.864,1191.389L255.111,1191.389L275.358,1191.389L295.605,1191.389L315.852,1191.389L336.099,1191.389L356.345,1191.389L376.592,1191.389L396.839,1191.389L417.086,1191.389L437.333,1191.389L457.58,1191.389L477.827,1191.389L498.074,1191.389L518.321,1191.389L538.568,1191.389L558.815,1191.389L579.062,1191.389L599.308,1191.389L619.555,1191.389L639.802,1191.389L660.049,1191.389L680.296,1191.389L700.543,1191.389L720.79,1191.389L741.037,1191.389L761.284,1191.389L781.531,1191.389L801.778,1191.389L822.025,1191.389L842.272,1191.389L862.518,1191.389L882.765,1191.389L903.012,1191.389L923.259,1191.389L943.506,1191.389L963.753,1191.389L984,1191.389L1004.247,1191.389L1024.494,1191.389L1044.741,1191.389L1064.988,1191.389L1085.235,1191.389L1105.482,1191.389L1125.728,1191.389L1145.975,1191.389L1166.222,1191.389L1186.469,1191.389L1206.716,1191.389L1226.963,1191.389L1247.21,1191.389L1267.457,1191.389L1287.704,1191.389L1307.951,1191.389L1328.198,1191.389L1348.445,1191.389L1368.692,1191.389L1388.938,1191.389L1409.185,1191.389L1429.432,1191.389L1449.679,1191.389L1469.926,1191.389L1490.173,1191.389L1510.42,1191.389L1530.667,1191.389L1550.914,1191.389L1571.161,1191.389L1591.408,1191.389L1611.655,1191.389L1631.901,1191.389L1652.148,1191.389L1672.395,1191.389L1692.642,1191.389L1712.889,1191.389L1733.136,1191.389L1753.383,1191.389L1773.63,1191.389L1793.877,1191.389L1814.124,1191.389L1834.371,1191.389L1854.618,1191.389L1874.865,1191.389L1895.111,1191.389L1915.358,1191.389M-1000.198,1109.987L-979.951,1109.987L-959.704,1109.987L-939.458,1109.987L-919.211,1109.987L-898.964,1109.987L-878.717,1109.987L-858.47,1109.987L-838.223,1109.987L-817.976,1109.987L-797.729,1109.987L-777.482,1109.987L-757.235,1109.987L-736.988,1109.987L-716.741,1109.987L-696.494,1109.987L-676.248,1109.987L-656.001,1109.987L-635.754,1109.987L-615.507,1109.987L-595.26,1109.987L-575.013,1109.987L-554.766,1109.987L-534.519,1109.987L-514.272,1109.987L-494.025,1109.987L-473.778,1109.987L-453.531,1109.987L-433.284,1109.987L-413.038,1109.987L-392.791,1109.987L-372.544,1109.987L-352.297,1109.987L-332.05,1109.987L-311.803,1109.987L-291.556,1109.987L-271.309,1109.987L-251.062,1109.987L-230.815,1109.987L-210.568,1109.987L-190.321,1109.987L-170.075,1109.987L-149.828,1109.987L-129.581,1109.987L-109.334,1109.987L-89.087,1109.987L-68.84,1109.987L-48.593,1109.987L-28.346,1109.987L-8.099,1109.987L12.148,1109.987L32.395,1109.987L52.642,1109.987L72.889,1109.987L93.135,1109.987L113.382,1109.987L133.629,1109.987L153.876,1109.987L174.123,1109.987L194.37,1109.987L214.617,1109.987L234.864,1109.987L255.111,1109.987L275.358,1109.987L295.605,1109.987L315.852,1109.987L336.099,1109.987L356.345,1109.987L376.592,1109.987L396.839,1109.987L417.086,1109.987L437.333,1109.987L457.58,1109.987L477.827,1109.987L498.074,1109.987L518.321,1109.987L538.568,1109.987L558.815,1109.987L579.062,1109.987L599.308,1109.987L619.555,1109.987L639.802,1109.987L660.049,1109.987L680.296,1109.987L700.543,1109.987L720.79,1109.987L741.037,1109.987L761.284,1109.987L781.531,1109.987L801.778,1109.987L822.025,1109.987L842.272,1109.987L862.518,1109.987L882.765,1109.987L903.012,1109.987L923.259,1109.987L943.506,1109.987L963.753,1109.987L984,1109.987L1004.247,1109.987L1024.494,1109.987L1044.741,1109.987L1064.988,1109.987L1085.235,1109.987L1105.482,1109.987L1125.728,1109.987L1145.975,1109.987L1166.222,1109.987L1186.469,1109.987L1206.716,1109.987L1226.963,1109.987L1247.21,1109.987L1267.457,1109.987L1287.704,1109.987L1307.951,1109.987L1328.198,1109.987L1348.445,1109.987L1368.692,1109.987L1388.938,1109.987L1409.185,1109.987L1429.432,1109.987L1449.679,1109.987L1469.926,1109.987L1490.173,1109.987L1510.42,1109.987L1530.667,1109.987L1550.914,1109.987L1571.161,1109.987L1591.408,1109.987L1611.655,1109.987L1631.901,1109.987L1652.148,1109.987L1672.395,1109.987L1692.642,1109.987L1712.889,1109.987L1733.136,1109.987L1753.383,1109.987L1773.63,1109.987L1793.877,1109.987L1814.124,1109.987L1834.371,1109.987L1854.618,1109.987L1874.865,1109.987L1895.111,1109.987L1915.358,1109.987M-1000.198,1026.021L-979.951,1026.021L-959.704,1026.021L-939.458,1026.021L-919.211,1026.021L-898.964,1026.021L-878.717,1026.021L-858.47,1026.021L-838.223,1026.021L-817.976,1026.021L-797.729,1026.021L-777.482,1026.021L-757.235,1026.021L-736.988,1026.021L-716.741,1026.021L-696.494,1026.021L-676.248,1026.021L-656.001,1026.021L-635.754,1026.021L-615.507,1026.021L-595.26,1026.021L-575.013,1026.021L-554.766,1026.021L-534.519,1026.021L-514.272,1026.021L-494.025,1026.021L-473.778,1026.021L-453.531,1026.021L-433.284,1026.021L-413.038,1026.021L-392.791,1026.021L-372.544,1026.021L-352.297,1026.021L-332.05,1026.021L-311.803,1026.021L-291.556,1026.021L-271.309,1026.021L-251.062,1026.021L-230.815,1026.021L-210.568,1026.021L-190.321,1026.021L-170.075,1026.021L-149.828,1026.021L-129.581,1026.021L-109.334,1026.021L-89.087,1026.021L-68.84,1026.021L-48.593,1026.021L-28.346,1026.021L-8.099,1026.021L12.148,1026.021L32.395,1026.021L52.642,1026.021L72.889,1026.021L93.135,1026.021L113.382,1026.021L133.629,1026.021L153.876,1026.021L174.123,1026.021L194.37,1026.021L214.617,1026.021L234.864,1026.021L255.111,1026.021L275.358,1026.021L295.605,1026.021L315.852,1026.021L336.099,1026.021L356.345,1026.021L376.592,1026.021L396.839,1026.021L417.086,1026.021L437.333,1026.021L457.58,1026.021L477.827,1026.021L498.074,1026.021L518.321,1026.021L538.568,1026.021L558.815,1026.021L579.062,1026.021L599.308,1026.021L619.555,1026.021L639.802,1026.021L660.049,1026.021L680.296,1026.021L700.543,1026.021L720.79,1026.021L741.037,1026.021L761.284,1026.021L781.531,1026.021L801.778,1026.021L822.025,1026.021L842.272,1026.021L862.518,1026.021L882.765,1026.021L903.012,1026.021L923.259,1026.021L943.506,1026.021L963.753,1026.021L984,1026.021L1004.247,1026.021L1024.494,1026.021L1044.741,1026.021L1064.988,1026.021L1085.235,1026.021L1105.482,1026.021L1125.728,1026.021L1145.975,1026.021L1166.222,1026.021L1186.469,1026.021L1206.716,1026.021L1226.963,1026.021L1247.21,1026.021L1267.457,1026.021L1287.704,1026.021L1307.951,1026.021L1328.198,1026.021L1348.445,1026.021L1368.692,1026.021L1388.938,1026.021L1409.185,1026.021L1429.432,1026.021L1449.679,1026.021L1469.926,1026.021L1490.173,1026.021L1510.42,1026.021L1530.667,1026.021L1550.914,1026.021L1571.161,1026.021L1591.408,1026.021L1611.655,1026.021L1631.901,1026.021L1652.148,1026.021L1672.395,1026.021L1692.642,1026.021L1712.889,1026.021L1733.136,1026.021L1753.383,1026.021L1773.63,1026.021L1793.877,1026.021L1814.124,1026.021L1834.371,1026.021L1854.618,1026.021L1874.865,1026.021L1895.111,1026.021L1915.358,1026.021M-1000.198,936.498L-979.951,936.498L-959.704,936.498L-939.458,936.498L-919.211,936.498L-898.964,936.498L-878.717,936.498L-858.47,936.498L-838.223,936.498L-817.976,936.498L-797.729,936.498L-777.482,936.498L-757.235,936.498L-736.988,936.498L-716.741,936.498L-696.494,936.498L-676.248,936.498L-656.001,936.498L-635.754,936.498L-615.507,936.498L-595.26,936.498L-575.013,936.498L-554.766,936.498L-534.519,936.498L-514.272,936.498L-494.025,936.498L-473.778,936.498L-453.531,936.498L-433.284,936.498L-413.038,936.498L-392.791,936.498L-372.544,936.498L-352.297,936.498L-332.05,936.498L-311.803,936.498L-291.556,936.498L-271.309,936.498L-251.062,936.498L-230.815,936.498L-210.568,936.498L-190.321,936.498L-170.075,936.498L-149.828,936.498L-129.581,936.498L-109.334,936.498L-89.087,936.498L-68.84,936.498L-48.593,936.498L-28.346,936.498L-8.099,936.498L12.148,936.498L32.395,936.498L52.642,936.498L72.889,936.498L93.135,936.498L113.382,936.498L133.629,936.498L153.876,936.498L174.123,936.498L194.37,936.498L214.617,936.498L234.864,936.498L255.111,936.498L275.358,936.498L295.605,936.498L315.852,936.498L336.099,936.498L356.345,936.498L376.592,936.498L396.839,936.498L417.086,936.498L437.333,936.498L457.58,936.498L477.827,936.498L498.074,936.498L518.321,936.498L538.568,936.498L558.815,936.498L579.062,936.498L599.308,936.498L619.555,936.498L639.802,936.498L660.049,936.498L680.296,936.498L700.543,936.498L720.79,936.498L741.037,936.498L761.284,936.498L781.531,936.498L801.778,936.498L822.025,936.498L842.272,936.498L862.518,936.498L882.765,936.498L903.012,936.498L923.259,936.498L943.506,936.498L963.753,936.498L984,936.498L1004.247,936.498L1024.494,936.498L1044.741,936.498L1064.988,936.498L1085.235,936.498L1105.482,936.498L1125.728,936.498L1145.975,936.498L1166.222,936.498L1186.469,936.498L1206.716,936.498L1226.963,936.498L1247.21,936.498L1267.457,936.498L1287.704,936.498L1307.951,936.498L1328.198,936.498L1348.445,936.498L1368.692,936.498L1388.938,936.498L1409.185,936.498L1429.432,936.498L1449.679,936.498L1469.926,936.498L1490.173,936.498L1510.42,936.498L1530.667,936.498L1550.914,936.498L1571.161,936.498L1591.408,936.498L1611.655,936.498L1631.901,936.498L1652.148,936.498L1672.395,936.498L1692.642,936.498L1712.889,936.498L1733.136,936.498L1753.383,936.498L1773.63,936.498L1793.877,936.498L1814.124,936.498L1834.371,936.498L1854.618,936.498L1874.865,936.498L1895.111,936.498L1915.358,936.498M-1000.198,837.38L-979.951,837.38L-959.704,837.38L-939.458,837.38L-919.211,837.38L-898.964,837.38L-878.717,837.38L-858.47,837.38L-838.223,837.38L-817.976,837.38L-797.729,837.38L-777.482,837.38L-757.235,837.38L-736.988,837.38L-716.741,837.38L-696.494,837.38L-676.248,837.38L-656.001,837.38L-635.754,837.38L-615.507,837.38L-595.26,837.38L-575.013,837.38L-554.766,837.38L-534.519,837.38L-514.272,837.38L-494.025,837.38L-473.778,837.38L-453.531,837.38L-433.284,837.38L-413.038,837.38L-392.791,837.38L-372.544,837.38L-352.297,837.38L-332.05,837.38L-311.803,837.38L-291.556,837.38L-271.309,837.38L-251.062,837.38L-230.815,837.38L-210.568,837.38L-190.321,837.38L-170.075,837.38L-149.828,837.38L-129.581,837.38L-109.334,837.38L-89.087,837.38L-68.84,837.38L-48.593,837.38L-28.346,837.38L-8.099,837.38L12.148,837.38L32.395,837.38L52.642,837.38L72.889,837.38L93.135,837.38L113.382,837.38L133.629,837.38L153.876,837.38L174.123,837.38L194.37,837.38L214.617,837.38L234.864,837.38L255.111,837.38L275.358,837.38L295.605,837.38L315.852,837.38L336.099,837.38L356.345,837.38L376.592,837.38L396.839,837.38L417.086,837.38L437.333,837.38L457.58,837.38L477.827,837.38L498.074,837.38L518.321,837.38L538.568,837.38L558.815,837.38L579.062,837.38L599.308,837.38L619.555,837.38L639.802,837.38L660.049,837.38L680.296,837.38L700.543,837.38L720.79,837.38L741.037,837.38L761.284,837.38L781.531,837.38L801.778,837.38L822.025,837.38L842.272,837.38L862.518,837.38L882.765,837.38L903.012,837.38L923.259,837.38L943.506,837.38L963.753,837.38L984,837.38L1004.247,837.38L1024.494,837.38L1044.741,837.38L1064.988,837.38L1085.235,837.38L1105.482,837.38L1125.728,837.38L1145.975,837.38L1166.222,837.38L1186.469,837.38L1206.716,837.38L1226.963,837.38L1247.21,837.38L1267.457,837.38L1287.704,837.38L1307.951,837.38L1328.198,837.38L1348.445,837.38L1368.692,837.38L1388.938,837.38L1409.185,837.38L1429.432,837.38L1449.679,837.38L1469.926,837.38L1490.173,837.38L1510.42,837.38L1530.667,837.38L1550.914,837.38L1571.161,837.38L1591.408,837.38L1611.655,837.38L1631.901,837.38L1652.148,837.38L1672.395,837.38L1692.642,837.38L1712.889,837.38L1733.136,837.38L1753.383,837.38L1773.63,837.38L1793.877,837.38L1814.124,837.38L1834.371,837.38L1854.618,837.38L1874.865,837.38L1895.111,837.38L1915.358,837.38M-1000.198,722.407L-979.951,722.407L-959.704,722.407L-939.458,722.407L-919.211,722.407L-898.964,722.407L-878.717,722.407L-858.47,722.407L-838.223,722.407L-817.976,722.407L-797.729,722.407L-777.482,722.407L-757.235,722.407L-736.988,722.407L-716.741,722.407L-696.494,722.407L-676.248,722.407L-656.001,722.407L-635.754,722.407L-615.507,722.407L-595.26,722.407L-575.013,722.407L-554.766,722.407L-534.519,722.407L-514.272,722.407L-494.025,722.407L-473.778,722.407L-453.531,722.407L-433.284,722.407L-413.038,722.407L-392.791,722.407L-372.544,722.407L-352.297,722.407L-332.05,722.407L-311.803,722.407L-291.556,722.407L-271.309,722.407L-251.062,722.407L-230.815,722.407L-210.568,722.407L-190.321,722.407L-170.075,722.407L-149.828,722.407L-129.581,722.407L-109.334,722.407L-89.087,722.407L-68.84,722.407L-48.593,722.407L-28.346,722.407L-8.099,722.407L12.148,722.407L32.395,722.407L52.642,722.407L72.889,722.407L93.135,722.407L113.382,722.407L133.629,722.407L153.876,722.407L174.123,722.407L194.37,722.407L214.617,722.407L234.864,722.407L255.111,722.407L275.358,722.407L295.605,722.407L315.852,722.407L336.099,722.407L356.345,722.407L376.592,722.407L396.839,722.407L417.086,722.407L437.333,722.407L457.58,722.407L477.827,722.407L498.074,722.407L518.321,722.407L538.568,722.407L558.815,722.407L579.062,722.407L599.308,722.407L619.555,722.407L639.802,722.407L660.049,722.407L680.296,722.407L700.543,722.407L720.79,722.407L741.037,722.407L761.284,722.407L781.531,722.407L801.778,722.407L822.025,722.407L842.272,722.407L862.518,722.407L882.765,722.407L903.012,722.407L923.259,722.407L943.506,722.407L963.753,722.407L984,722.407L1004.247,722.407L1024.494,722.407L1044.741,722.407L1064.988,722.407L1085.235,722.407L1105.482,722.407L1125.728,722.407L1145.975,722.407L1166.222,722.407L1186.469,722.407L1206.716,722.407L1226.963,722.407L1247.21,722.407L1267.457,722.407L1287.704,722.407L1307.951,722.407L1328.198,722.407L1348.445,722.407L1368.692,722.407L1388.938,722.407L1409.185,722.407L1429.432,722.407L1449.679,722.407L1469.926,722.407L1490.173,722.407L1510.42,722.407L1530.667,722.407L1550.914,722.407L1571.161,722.407L1591.408,722.407L1611.655,722.407L1631.901,722.407L1652.148,722.407L1672.395,722.407L1692.642,722.407L1712.889,722.407L1733.136,722.407L1753.383,722.407L1773.63,722.407L1793.877,722.407L1814.124,722.407L1834.371,722.407L1854.618,722.407L1874.865,722.407L1895.111,722.407L1915.358,722.407M-1000.198,580.288L-979.951,580.288L-959.704,580.288L-939.458,580.288L-919.211,580.288L-898.964,580.288L-878.717,580.288L-858.47,580.288L-838.223,580.288L-817.976,580.288L-797.729,580.288L-777.482,580.288L-757.235,580.288L-736.988,580.288L-716.741,580.288L-696.494,580.288L-676.248,580.288L-656.001,580.288L-635.754,580.288L-615.507,580.288L-595.26,580.288L-575.013,580.288L-554.766,580.288L-534.519,580.288L-514.272,580.288L-494.025,580.288L-473.778,580.288L-453.531,580.288L-433.284,580.288L-413.038,580.288L-392.791,580.288L-372.544,580.288L-352.297,580.288L-332.05,580.288L-311.803,580.288L-291.556,580.288L-271.309,580.288L-251.062,580.288L-230.815,580.288L-210.568,580.288L-190.321,580.288L-170.075,580.288L-149.828,580.288L-129.581,580.288L-109.334,580.288L-89.087,580.288L-68.84,580.288L-48.593,580.288L-28.346,580.288L-8.099,580.288L12.148,580.288L32.395,580.288L52.642,580.288L72.889,580.288L93.135,580.288L113.382,580.288L133.629,580.288L153.876,580.288L174.123,580.288L194.37,580.288L214.617,580.288L234.864,580.288L255.111,580.288L275.358,580.288L295.605,580.288L315.852,580.288L336.099,580.288L356.345,580.288L376.592,580.288L396.839,580.288L417.086,580.288L437.333,580.288L457.58,580.288L477.827,580.288L498.074,580.288L518.321,580.288L538.568,580.288L558.815,580.288L579.062,580.288L599.308,580.288L619.555,580.288L639.802,580.288L660.049,580.288L680.296,580.288L700.543,580.288L720.79,580.288L741.037,580.288L761.284,580.288L781.531,580.288L801.778,580.288L822.025,580.288L842.272,580.288L862.518,580.288L882.765,580.288L903.012,580.288L923.259,580.288L943.506,580.288L963.753,580.288L984,580.288L1004.247,580.288L1024.494,580.288L1044.741,580.288L1064.988,580.288L1085.235,580.288L1105.482,580.288L1125.728,580.288L1145.975,580.288L1166.222,580.288L1186.469,580.288L1206.716,580.288L1226.963,580.288L1247.21,580.288L1267.457,580.288L1287.704,580.288L1307.951,580.288L1328.198,580.288L1348.445,580.288L1368.692,580.288L1388.938,580.288L1409.185,580.288L1429.432,580.288L1449.679,580.288L1469.926,580.288L1490.173,580.288L1510.42,580.288L1530.667,580.288L1550.914,580.288L1571.161,580.288L1591.408,580.288L1611.655,580.288L1631.901,580.288L1652.148,580.288L1672.395,580.288L1692.642,580.288L1712.889,580.288L1733.136,580.288L1753.383,580.288L1773.63,580.288L1793.877,580.288L1814.124,580.288L1834.371,580.288L1854.618,580.288L1874.865,580.288L1895.111,580.288L1915.358,580.288M-1000.198,386.113L-979.951,386.113L-959.704,386.113L-939.458,386.113L-919.211,386.113L-898.964,386.113L-878.717,386.113L-858.47,386.113L-838.223,386.113L-817.976,386.113L-797.729,386.113L-777.482,386.113L-757.235,386.113L-736.988,386.113L-716.741,386.113L-696.494,386.113L-676.248,386.113L-656.001,386.113L-635.754,386.113L-615.507,386.113L-595.26,386.113L-575.013,386.113L-554.766,386.113L-534.519,386.113L-514.272,386.113L-494.025,386.113L-473.778,386.113L-453.531,386.113L-433.284,386.113L-413.038,386.113L-392.791,386.113L-372.544,386.113L-352.297,386.113L-332.05,386.113L-311.803,386.113L-291.556,386.113L-271.309,386.113L-251.062,386.113L-230.815,386.113L-210.568,386.113L-190.321,386.113L-170.075,386.113L-149.828,386.113L-129.581,386.113L-109.334,386.113L-89.087,386.113L-68.84,386.113L-48.593,386.113L-28.346,386.113L-8.099,386.113L12.148,386.113L32.395,386.113L52.642,386.113L72.889,386.113L93.135,386.113L113.382,386.113L133.629,386.113L153.876,386.113L174.123,386.113L194.37,386.113L214.617,386.113L234.864,386.113L255.111,386.113L275.358,386.113L295.605,386.113L315.852,386.113L336.099,386.113L356.345,386.113L376.592,386.113L396.839,386.113L417.086,386.113L437.333,386.113L457.58,386.113L477.827,386.113L498.074,386.113L518.321,386.113L538.568,386.113L558.815,386.113L579.062,386.113L599.308,386.113L619.555,386.113L639.802,386.113L660.049,386.113L680.296,386.113L700.543,386.113L720.79,386.113L741.037,386.113L761.284,386.113L781.531,386.113L801.778,386.113L822.025,386.113L842.272,386.113L862.518,386.113L882.765,386.113L903.012,386.113L923.259,386.113L943.506,386.113L963.753,386.113L984,386.113L1004.247,386.113L1024.494,386.113L1044.741,386.113L1064.988,386.113L1085.235,386.113L1105.482,386.113L1125.728,386.113L1145.975,386.113L1166.222,386.113L1186.469,386.113L1206.716,386.113L1226.963,386.113L1247.21,386.113L1267.457,386.113L1287.704,386.113L1307.951,386.113L1328.198,386.113L1348.445,386.113L1368.692,386.113L1388.938,386.113L1409.185,386.113L1429.432,386.113L1449.679,386.113L1469.926,386.113L1490.173,386.113L1510.42,386.113L1530.667,386.113L1550.914,386.113L1571.161,386.113L1591.408,386.113L1611.655,386.113L1631.901,386.113L1652.148,386.113L1672.395,386.113L1692.642,386.113L1712.889,386.113L1733.136,386.113L1753.383,386.113L1773.63,386.113L1793.877,386.113L1814.124,386.113L1834.371,386.113L1854.618,386.113L1874.865,386.113L1895.111,386.113L1915.358,386.113M-1000.198,60.91L-979.951,60.91L-959.704,60.91L-939.458,60.91L-919.211,60.91L-898.964,60.91L-878.717,60.91L-858.47,60.91L-838.223,60.91L-817.976,60.91L-797.729,60.91L-777.482,60.91L-757.235,60.91L-736.988,60.91L-716.741,60.91L-696.494,60.91L-676.248,60.91L-656.001,60.91L-635.754,60.91L-615.507,60.91L-595.26,60.91L-575.013,60.91L-554.766,60.91L-534.519,60.91L-514.272,60.91L-494.025,60.91L-473.778,60.91L-453.531,60.91L-433.284,60.91L-413.038,60.91L-392.791,60.91L-372.544,60.91L-352.297,60.91L-332.05,60.91L-311.803,60.91L-291.556,60.91L-271.309,60.91L-251.062,60.91L-230.815,60.91L-210.568,60.91L-190.321,60.91L-170.075,60.91L-149.828,60.91L-129.581,60.91L-109.334,60.91L-89.087,60.91L-68.84,60.91L-48.593,60.91L-28.346,60.91L-8.099,60.91L12.148,60.91L32.395,60.91L52.642,60.91L72.889,60.91L93.135,60.91L113.382,60.91L133.629,60.91L153.876,60.91L174.123,60.91L194.37,60.91L214.617,60.91L234.864,60.91L255.111,60.91L275.358,60.91L295.605,60.91L315.852,60.91L336.099,60.91L356.345,60.91L376.592,60.91L396.839,60.91L417.086,60.91L437.333,60.91L457.58,60.91L477.827,60.91L498.074,60.91L518.321,60.91L538.568,60.91L558.815,60.91L579.062,60.91L599.308,60.91L619.555,60.91L639.802,60.91L660.049,60.91L680.296,60.91L700.543,60.91L720.79,60.91L741.037,60.91L761.284,60.91L781.531,60.91L801.778,60.91L822.025,60.91L842.272,60.91L862.518,60.91L882.765,60.91L903.012,60.91L923.259,60.91L943.506,60.91L963.753,60.91L984,60.91L1004.247,60.91L1024.494,60.91L1044.741,60.91L1064.988,60.91L1085.235,60.91L1105.482,60.91L1125.728,60.91L1145.975,60.91L1166.222,60.91L1186.469,60.91L1206.716,60.91L1226.963,60.91L1247.21,60.91L1267.457,60.91L1287.704,60.91L1307.951,60.91L1328.198,60.91L1348.445,60.91L1368.692,60.91L1388.938,60.91L1409.185,60.91L1429.432,60.91L1449.679,60.91L1469.926,60.91L1490.173,60.91L1510.42,60.91L1530.667,60.91L1550.914,60.91L1571.161,60.91L1591.408,60.91L1611.655,60.91L1631.901,60.91L1652.148,60.91L1672.395,60.91L1692.642,60.91L1712.889,60.91L1733.136,60.91L1753.383,60.91L1773.63,60.91L1793.877,60.91L1814.124,60.91L1834.371,60.91L1854.618,60.91L1874.865,60.91L1895.111,60.91L1915.358,60.91";
+const MAP_MESH  = "M629.818,653.109L638.303,655.577L641.889,657.819L641.014,661.664L641.685,665.201L626.786,665.413L616.815,663.836M767.142,757.867L767.405,752.569L771.574,749.209L779.417,748.33L780.7,744.29L778.892,737.545L782.187,731.061L782.099,727.413L770.145,723.339L765.422,723.467L760.407,717.541L754.197,719.558L743.934,715.085L744.109,712.576L741.223,707.001L734.75,706.366L734.08,702.344L736.121,699.692L730.931,692.247L722.534,693.524L720.085,692.852L718.044,695.848L715.012,695.334L713.029,686.815L711.105,682.361L712.679,681.104L719.21,681.561L722.359,678.607L720.027,674.99L714.574,672.581L715.041,670.093L711.746,667.57L706.673,658.438L708.422,654.643L707.635,647.971L699.705,644.544L695.448,646.248L694.311,642.688L685.768,639.031L683.174,630.396L682.474,623.172L678.567,619.716L682.066,614.928L679.646,600.57L685.419,591.491L684.194,588.719M684.923,572.081L702.241,550.635L709.764,540.656L712.825,531.686L700.842,519.368L704.137,507.381L696.848,493.331L702.3,476.681L692.882,453.657L700.346,437.835L687.955,423.397L689.15,407.762L695.681,405.686L709.472,396.471M728.365,771.179L730.493,768.293L736.266,770.804L738.861,771.258L739.911,773.561L741.135,773.915M689.15,407.762L692.562,391.62L682.182,382.217L669.616,390.23L665.622,407.148L657.895,417.111L649.207,411.698L638.653,412.801L629.643,400.808L624.774,406.841L619.76,407.762L618.564,422.467L603.316,418.915L601.158,431.107L593.373,431.034L588.038,446.217L579.933,468.964L567.366,496.429L570.311,502.888L567.483,510.271L559.465,509.957L554.217,527.036L554.713,550.287L559.873,558.919L557.191,578.364L550.456,589.393L546.899,598.507M477.945,707.766L479.112,712.272L482.873,712.489L486.634,717.605L492.29,723.573L496.459,722.593L503.544,728.301L505.352,729.398L507.684,729.124L511.504,732.384L523.166,734.667L519.084,743.054L518.064,751.675L515.819,753.725L512.145,752.63L512.408,755.668L506.489,762.342L506.343,767.659L510.221,765.832L512.991,770.962L512.67,774.249L515.061,778.592L512.233,782.092L514.332,790.897L518.734,792.331L517.801,797.202M481.765,810.734L472.377,812.164L463.251,807.194L460.306,809.563L445.407,804.555L442.171,800.228M624.774,406.841L635.591,417.826L648.216,432.716L648.449,464.872L651.16,472.686M715.012,695.334L708.043,696.115L705.565,698.983L705.04,705.555L701.804,704.304L694.515,704.919L692.387,701.881L689.355,704.15L686.293,702.256L679.937,701.991L670.899,698.872L662.706,697.829L656.438,698.14L652.006,701.682L648.128,702.19L647.953,696.36L645.475,690.224L650.315,687.494L650.373,682.155L648.128,676.997L647.778,670.955L655.592,671.048L664.397,665.835L666.263,657.962L672.911,653.421L672.153,647.049L677.08,644.617L685.768,639.031M697.343,779.04L693.67,777.069L689.85,778.923L686.235,776.796L688.276,775.543L689.704,771.554L691.92,767.837L691.337,765.732L693.028,764.797L693.815,766.408L698.597,766.766L700.754,765.892L699.238,764.697L699.792,762.942L696.964,759.938L695.798,754.961L692.853,752.995L693.436,748.923L689.792,745.667L686.439,745.215L680.491,741.423L675.097,742.621L673.173,744.413L669.733,744.413L667.721,747.266L661.744,748.412L658.974,750.27L655.213,747.328L650.023,747.266L645.008,745.934L641.51,748.535L640.956,745.277L636.437,741.96L638.04,737.024L640.285,733.809L642.035,734.542L639.965,728.955L647.312,718.508L651.335,717.025L652.181,713.442L648.128,702.19M640.285,733.809L632.588,729.04L626.757,730.809L622.937,729.525L618.127,732.196L614.045,727.773L610.721,729.483L610.255,728.723L606.552,722.551L600.517,721.783L599.759,717.82L594.19,716.4L592.994,719.687L588.592,717.068L589.088,713.551L583.052,712.446L579.204,708.29L575.88,700.002L576.521,695.468L574.51,688.376L571.565,683.614L573.81,680.006L571.944,673.092M641.685,665.201L645.825,666.704L647.778,670.955M641.51,748.535L636.553,751.044L632.734,759.155L627.836,767.163L621.334,769.362L616.29,768.848L610.08,771.909L607.048,773.66L600.371,771.416L594.306,766.408L591.741,764.956L590.166,760.961L588.796,760.84M595.094,745.605L594.481,750.535L589.933,750.575L591.478,753.178L588.796,760.84L587.251,762.842L580.166,763.121L576.084,765.792L569.407,764.896L557.803,761.842L555.996,757.726L548.007,759.777L547.074,762.042L542.147,760.359L538.006,760.038L534.362,757.867L535.587,754.94L535.295,752.833L537.715,752.162L541.826,755.486L542.963,752.325L550.106,752.833L555.908,750.677L559.786,751.044L562.322,753.502L563.081,751.471L561.914,743.59L564.83,742.043L567.687,736.399L573.693,740.347L578.271,735.315L581.128,734.395L587.397,738.148L591.216,737.524L594.948,739.829L594.277,741.381L595.094,745.605L599.205,748.698L602.208,750.025L609.001,748.535L609.642,746.118L612.879,745.749L616.815,743.857L617.689,744.639L621.48,743.116L623.404,740.243L626.057,739.497L634.716,743.219L636.437,741.96M686.235,776.796L684.777,771.495L685.652,766.508L685.389,761.341L680.724,754.252L678.13,749.189L675.622,745.605L673.173,744.413M688.859,797.05L684.106,795.873L678.217,791.777L668.683,794.409L664.66,797.258L652.764,796.671L646.554,794.923L643.405,795.74L641.072,791.107L639.585,789.134L641.481,787.231L639.469,785.806L636.932,788.366L632.209,785.053L631.568,780.325L626.64,777.616L625.736,773.935L621.334,769.362M628.098,641.046L637.37,636.588L650.956,637.527L658.916,636.069L660.053,639.105L664.368,640.04L672.153,647.049M654.484,614.902L661.394,612.195L664.922,614.078L671.89,619.691L678.567,619.716M579.204,708.29L575.588,709.642L573.46,708.159L571.419,710.622L565.588,713.096L562.585,716.271L556.695,719.044L558.124,722.806L558.999,728.09L563.11,731.082L567.687,736.399M535.295,752.833L526.607,749.148L524.945,751.756L518.064,751.675M507.684,729.124L508.151,723.637L506.518,720.8L507.451,712.186L506.081,698.606L510.95,698.606L512.991,693.658L515.003,681.424L513.516,676.836M526.636,656.317L532.758,658.177L537.948,656.031M684.311,815.826L677.342,814.367L669.091,817.797L669.004,823.185L661.656,824.206L655.942,820.441L649.469,823.404L643.463,823.093L642.88,815.918L638.827,812.423L640.169,810.864L639.294,809.563L640.664,806.054L643.726,802.583L639.79,797.77L639.09,793.666L641.072,791.107M669.091,817.797L673.027,820.679L670.52,827.407L668.596,828.622M620.78,841.333L624.541,836.207L625.008,832.758L627.661,831.225L627.807,828.422L633.113,827.462L636.203,825.117L640.577,825.335L641.918,823.459L643.463,823.093M614.453,817.245L613.928,813.775L617.427,808.37L617.952,810.437L620.139,809.469M624.337,817.485L623.317,821.174L624.454,825.808L627.807,828.422M610.08,771.909L612.033,776.404L614.628,779.702L611.508,784.01L607.835,781.471L602.237,781.627L595.269,779.722L591.478,779.975L589.729,782.364L586.843,779.722L585.122,784.474L589.088,789.805L590.866,793.304L594.569,797.505L597.659,799.964L600.721,804.611L607.893,808.799L606.989,810.66M568.649,776.659L574.306,777.05L575.792,775.092L578.533,776.991L581.711,777.206L581.682,773.974L584.51,772.794L585.297,768.075L591.741,764.956M542.147,760.359L541.505,765.195L537.948,767.183L531.942,765.693L530.193,770.429L526.344,770.804L524.945,768.947L520.396,772.893L516.489,773.443L512.991,770.962M503.544,728.301L504.419,721.27L506.518,720.8M484.418,705.204L490.366,706.235L497.859,703.534L502.99,709.185L507.451,712.186M384.413,817.208L387.358,814.441L390.653,812.85L392.694,818.183L397.475,818.183L398.846,816.803L403.569,817.19L405.843,822.619L402.082,825.536L401.994,833.874L400.682,835.418L400.362,840.425L396.863,841.28L400.099,847.571L397.854,854.386L400.653,857.44L399.545,860.238L396.542,864.08L397.213,867.438M396.251,653.925L397.913,661.475L396.251,668.926L401.266,668.716L407.388,671.559M569.407,764.896L568.504,770.666L570.457,775.602M594.948,739.829L596.085,737.128L599.671,737.336L602.441,736.066L602.645,734.918L604.219,734.332L604.744,731.524L606.61,730.977L607.864,728.744L610.255,728.723M611.508,784.01L614.424,783.971L612.412,788.98L616.319,793.323L615.124,798.603L613.229,799.114L611.712,800.115L609.088,802.715L607.893,808.799M632.326,813.239L635.095,812.59L638.827,812.423M621.655,807.007L622.296,806.054L619.206,803.748L616.552,802.564L615.386,801.02L613.229,799.114";
+const MAP_VW = 1000, MAP_VH = 1191;
+const MAP_PAL = ["#c5dba7", "#f5d88a", "#f5b09a", "#9ac8e5", "#c0a8d8", "#a8d4c0", "#f0c898", "#d8c0a0", "#e8d4a0", "#b8dac8"];
+const mclr = id => MAP_PAL[id % MAP_PAL.length];
+
+const LONG_TEXTS = {"gb": "Waiting in line is a literal Olympic sport here. British people will form a perfect, single-file line for a bus that isn't even coming, just because it feels correct. Also, they call potato chips \"crisps\" and french fries \"chips\".", "fr": "They will go on strike because the weather is too nice, because the weather is too bad, or just because it's Tuesday. Also, you haven't truly known fear until you've been judged by a Parisian waiter who thinks your accent sounds like a dying lawnmower.", "it": "Hands are a mandatory part of the grammar system. If you tie an Italian's hands behind their back, they legally become mute. And don't you dare order a cappuccino after 11:00 AM unless you want to be judged by the entire country.", "de": "Fun is highly regulated and must be scheduled three weeks in advance. If you cross the street when the little pedestrian light is red \u2014 even if there hasn't been a car on that road since 1998 \u2014 you will get stared down like a federal fugitive.", "nl": "Everyone here is 8 feet tall and rides a bicycle like they're trying to win the Tour de France while balancing a week's worth of groceries. Plus, the country is so flat that a standard speed bump qualifies as a mountain.", "es": "Dinner starts at roughly midnight, and bedtime is just a suggestion. They take a daily nap (siesta) because staying awake for the absolute drama of their own history and reality TV is just too exhausting.", "ch": "Neutral about absolutely everything except cheese, chocolate, and hiding money. If an alien invasion happens, Switzerland will just sit in a mountain bunker polishing luxury watches, waiting for it to blow over.", "is": "The population is so small and interconnected that they literally have an app to check if the person they are flirting with at a party is actually their cousin.", "ie": "Ireland: They will apologize to a literal lampost if they bump into it, but will also call their best friend a \"total absolute gobshite\" as a term of high endearment. Also, their weather forecast is just rain.", "gr": "If you think your family is dramatic, try living in a place where every casual Sunday dinner sounds like a theatrical performance of a mythological war, complete with intense hand gestures and plates breaking.", "at": "They managed to convince the entire world that Beethoven was Austrian and Hitler was German, when it is actually the exact opposite. Absolute masterclass in public relations.", "be": "They invented french fries, let the French take all the credit for the name, and now they just make waffles and chocolate to cope with the existential regret.", "se": "The absolute kings of passive-aggression. They invented IKEA just so the rest of the world could experience the existential dread of missing a single wooden dowel. Also, remember the internet drama when we found out they don't feed their guests dinner? Unforgivable.", "no": "Flexing on the entire planet by being disgustingly rich from oil money, yet a single casual lunch there costs equivalent to a monthly car payment. Their main personality traits are cross-country skiing and aggressively gatekeeping the concept of \"cozy\" (koselig).", "dk": "A country so flat that a strong gust of wind could blow the entire population into Germany. They are responsible for LEGO, meaning they engineered the most painful household biohazard in human history.", "fi": "They are technically Nordic, but they deserve a shoutout for being the introverts of the world. Their idea of a wild Friday night is sitting in a 200\u00b0F wooden box (sauna), running outside to jump into a frozen lake, and not speaking a single word to another human being for four days.", "pl": "They have survived some of the wildest plot twists in European history on a diet of pure spite and pierogi. Also, their language is a chaotic riddle \u2014 why use vowels when you can just smash the letters z, c, s, and z together and call it a name?", "cz": "Beer is literally cheaper than bottled water here. Prague looks like a literal fairy tale, but the locals are completely over tourists trying to ride Segways on 600-year-old cobblestones.", "sk": "The quiet sibling who divorced the Czech Republic in the '90s. They mostly spend their time building half the cars in Europe and wondering why foreigners still confuse them with Slovenia.", "hu": "They speak a language that shares zero roots with any of their neighbors, basically making it a country-wide secret code. Budapest is gorgeous, but the vibe is \"we invented the Rubik's Cube just to stress you out.\"", "ua": "Do not mess with them. They will out-meme you on the internet and then tow your entire military apparatus away with a farm tractor. Also, they will fight you if you say beetroot soup (Borsch) belongs to anyone else.", "hr": "Basically 90% coastline and 10% Game of Thrones filming locations. They took almost all the beach access from Bosnia, leaving them with like two inches of sand, which is the ultimate geographical power move.", "bg": "Psychological warfare at its finest: they nod their heads for \"no\" and shake them for \"yes.\" If you ask for directions here, you will end up utterly lost and questioning reality.", "ro": "Beautiful castles, spooky vampire vibes, and the most aggressive drivers on the continent. You haven't lived until you've been tailgated by a 20-year-old Dacia hatchback going 95 mph on a mountain cliff side.", "rs": "Powered entirely by espresso, intense eye contact, and Novak Djokovic. If you go to a bakery here, the pastry is larger than your torso, and the baker will look at you like you owe them money.", "al": "There are roughly 170,000 concrete military bunkers scattered across the country from a paranoid former dictator. They are everywhere \u2014 in backyards, on beaches, next to playgrounds. Talk about an intense aesthetic.", "ee": "They are so obsessed with the internet that they've basically uploaded their entire country to the cloud. You can vote, start a business, and probably marry a robot online here in five minutes. Despite having lightning-fast 5G, the stereotype among their neighbors is that Estonians talk and move in slow motion.", "lv": "Their national identity is split 50/50 between a deep, spiritual love for singing in the woods and an absolute, unhinged obsession with ice hockey. They also have an ongoing, bitter blood-feud with Estonia over who invented the decorated Christmas tree. It's the most wholesome beef in geopolitical history.", "lt": "They used to rule a massive empire that stretched all the way to the Black Sea, but now they are a small country whose entire emotional stability depends on an orange bouncy ball. If the national basketball team loses a game, the entire country goes into a state of mourning. Also, their favorite national dish is cepelinai, which are potato dumplings shaped like literal military zeppelins."};
+const SHORT_JOKES = {"al": "Albania has more bunkers than parking spots. Bring a flashlight, leave the GPS.", "ad": "Andorra is so small you could trip and accidentally invade France.", "at": "If Mozart had a Spotify, the entire country of Austria would be premium subscribers.", "by": "Belarus runs on potatoes, pine forests, and refusing to be on the news.", "be": "Belgium: where the chocolate is incredible and even the government takes 18 months to form.", "ba": "Bosnia has the longest country name in Europe and somehow the strongest coffee. Coincidence? Nope.", "bg": "Bulgaria invented yogurt and rose oil. Basically the most aesthetic breakfast and skincare combo ever.", "hr": "Croatia is shaped like a boomerang that keeps throwing back tourists in summer.", "cy": "Cyprus is the only country where you can sunbathe in Europe while watching Asia from across the street.", "cz": "In Czechia, beer is cheaper than water. Hydrating has never sounded so questionable.", "dk": "Danes are so happy they invented hygge \u2014 basically being cozy, professionally.", "ee": "Estonia made e-residency a thing, so you can be Estonian online without ever owning a winter coat.", "fi": "Finland has more saunas than cars. Their idea of small talk is also nothing.", "fr": "In France, baguettes are a constitutional right and refusing cheese is considered a personal attack.", "de": "Germans schedule their spontaneity. There's a form for that. Probably in triplicate.", "gr": "Greece is where every meal is a five-act play and salt is technically a fourth food group.", "hu": "Hungary's language is so unique it sounds like a wizard casting a spell on you.", "is": "Iceland has more sheep than people and more elves than either, according to local lore.", "ie": "Ireland is the only country where rain is just considered \"a soft day.\"", "it": "In Italy, pasta has 350 shapes and only one correct way to eat each. Get it wrong and a nonna will appear.", "lv": "Latvia is forest, choirs, and very firm opinions about which neighbor stole what.", "lt": "Lithuania once had the biggest empire in Europe. Now they have the biggest basketball obsession.", "lu": "Luxembourg is so small that getting lost there is technically just a quick walk.", "mt": "Malta is an island so tiny that the entire country could fit inside one IKEA parking lot.", "md": "Moldova has more wine cellars than people. Which raises some really important questions.", "me": "Montenegro means \"Black Mountain.\" The mountain is right there. They were not being subtle.", "nl": "In the Netherlands, bikes outnumber people, and pedestrians are essentially speed bumps.", "mk": "North Macedonia changed its name to avoid a fight with Greece. Diplomatic flex unlocked.", "no": "Norway's national hobby is being outdoors in weather that would make penguins call an Uber.", "pl": "Poland has cathedrals, castles, and pierogi shaped like little edible pillows. Untouchable combo.", "pt": "Portugal invented sad music called fado. It's basically a 4-minute existential crisis with guitar.", "ro": "Romania has Dracula, mountain wolves, and roads that double as roller coasters.", "ru": "Russia spans 11 time zones. By the time the sun rises in one end it's already setting in the other.", "rs": "Serbia takes coffee like an Olympic event. Three hours per cup, minimum, no exceptions.", "sk": "Slovakia has more castles per capita than almost any country. They were really into the medieval aesthetic.", "si": "Slovenia is the only country with \"love\" in its name. Awwww. Also Alpine lakes that look photoshopped.", "es": "In Spain, lunch is at 3pm, dinner at 11pm, and bedtime is whenever the sun comes back.", "se": "Sweden gave us IKEA, ABBA, and the unique pain of stepping barefoot on a stray meatball.", "ch": "Switzerland: neutral about wars, very NOT neutral about being late by 30 seconds.", "tr": "Turkey straddles two continents. Their breakfast spread also covers two continents. Just facts.", "ua": "Ukraine: where farm tractors became unexpected war heroes and TikTok is a national defense weapon.", "gb": "In Britain, the weather is small talk, the queue is sacred, and \"sorry\" is a full sentence with 47 meanings."};
+const HINT_C = {"8": "Two-headed eagle on a flag red as wine \u2014 Mother Teresa came from this Balkan line.", "20": "Tucked in the Pyrenees, skiing on snow \u2014 co-ruled by a French president and a Spanish bishop, you know.", "40": "Mozart, schnitzel, and Alps that touch the sky \u2014 where 'Sound of Music' families sing and reach high.", "112": "Last dictator in Europe runs this old Soviet show \u2014 borscht, storks, and birch trees in a row.", "56": "Waffles, chocolate, fries (don't say 'French!') \u2014 where Tintin and the Smurfs share a park bench.", "70": "Where one bullet sparked World War One's start \u2014 \u0107evapi, mosques, and a mountainous heart.", "100": "Yogurt and roses they perfected long ago \u2014 where 'yes' is shown by shaking the head 'no.'", "191": "Game of Thrones filmed 'King's Landing' on its coast \u2014 the necktie's birthplace, the Adriatic's host.", "196": "An island split by a UN-guarded line \u2014 halloumi cheese from Aphrodite's brine.", "203": "World's biggest beer drinkers, that's no lie \u2014 Prague's hundred spires reach for the sky.", "208": "LEGO bricks were born in this cozy Viking land \u2014 Hans Christian Andersen wrote tales by hand.", "233": "Where Skype was invented and the wifi flows free \u2014 medieval towers facing the Baltic Sea.", "246": "Saunas more common than chimneys here \u2014 Santa Claus officially lives this far north, dear.", "250": "Croissants, the Eiffel, and snails on a plate \u2014 Napoleon, berets, and a romantic date.", "276": "Bratwurst, beer, and a wall that came down \u2014 Oktoberfest fills every town.", "300": "Olympics, democracy, and Zeus's thunder past \u2014 olives and feta in a Mediterranean blast.", "348": "Paprika goulash and the Rubik's Cube \u2014 thermal baths in their capital's tube.", "352": "Volcanoes, geysers, and Bj\u00f6rk who sings strange \u2014 Northern lights dance through a treeless range.", "372": "Emerald isle where leprechauns hide \u2014 Guinness, U2, and Riverdance pride.", "380": "Boot-shaped land where pizza was born \u2014 Vespas, Vatican, and pasta adorn.", "428": "Middle of three Baltic siblings in line \u2014 Art Nouveau buildings making everything fine.", "440": "Biggest Baltic; basketball is religion here \u2014 cepelinai dumplings raise a cheer.", "442": "Tiny landlocked nation, rich beyond belief \u2014 three languages spoken, plus a Grand Duke chief.", "470": "Tiny island the Knights of St. John defended \u2014 limestone honey-walls beautifully blended.", "498": "Vineyards stretch from horizon to horizon's flame \u2014 has the world's biggest wine cellar to its name.", "499": "'Black Mountain' is what its name proclaims \u2014 Bay of Kotor where pirates once made claims.", "528": "Tulips, windmills, and dykes hold the sea \u2014 more bicycles than people, beautifully!", "807": "Mother Teresa was born in their capital town \u2014 Lake Ohrid is ancient, deep, and renown.", "578": "Fjords carved by glaciers deep and gray \u2014 Vikings sailed forth from this rugged bay.", "616": "Pierogi, Chopin, and Pope John Paul named \u2014 Wawel castle where dragons were tamed.", "620": "Western edge of Europe, port wine that flows \u2014 where Vasco da Gama's adventure first rose.", "642": "Land of Dracula, vampires roam the hills \u2014 Carpathian castles giving Gothic thrills.", "643": "Largest country on the entire planet, by far \u2014 onion-domes, vodka, and matryoshkas at the bar.", "688": "Djokovic's homeland, in the Balkans' middle ground \u2014 plum brandy rakija is passed around.", "703": "Once joined with the Czechs, then they split apart \u2014 castles on hilltops, mountains in the heart.", "705": "Tiny green country with Lake Bled's island view \u2014 Postojna Cave hides 'human fish' for you.", "724": "Flamenco, bullfights, and paella supreme \u2014 Picasso, Dal\u00ed, and Mediterranean gleam.", "752": "IKEA, ABBA, and meatballs galore \u2014 Pippi Longstocking opened many a door.", "756": "Chocolate, watches, and Heidi's mountain run \u2014 always neutral when the wars are done.", "792": "Spans two continents \u2014 Europe and Asia hold hands \u2014 baklava, bazaars, and ancient lands.", "804": "Sunflowers fill the breadbasket of Europe wide \u2014 borscht and brave hearts on the Dnipro's side.", "826": "Tea time, the King, and red double-decker bus \u2014 Big Ben chimes through Harry Potter fuss."};
+const HINT_K = {"8": "Painted rainbow colors by a mayor-artist's hand \u2014 Skanderbeg Square stands in the land.", "20": "Europe's highest capital, way up in the sky \u2014 shares its country's name (with 'la Vella' nearby).", "40": "Mozart's hometown, where sacher-torte cake is fine \u2014 imperial Habsburgs waltz through Sch\u00f6nbrunn divine.", "112": "Soviet blocks, Lenin Square, frigid winter air \u2014 the capital of flat lands and steely glare.", "56": "A peeing-boy statue and EU politics' show \u2014 the Atomium ball-building from World's Fair long ago.", "70": "Where the spark of WWI was struck on a street \u2014 hosted Winter Olympics, mosques and churches meet.", "100": "Named for wisdom in ancient Greek words \u2014 at Vitosha mountain's foot with cathedral golden birds.", "191": "Upper town and lower joined by a funicular ride \u2014 Croatia's capital with the necktie's pride.", "196": "Last divided capital, a Green Line through its heart \u2014 Greek and Turkish neighbourhoods kept apart.", "203": "City of a Hundred Spires, an astronomical clock \u2014 Charles Bridge crossing the Vltava on rock.", "208": "The Little Mermaid sits on a rock by the harbour's edge \u2014 Nyhavn's pastel houses, a Hans Christian pledge.", "233": "Cobblestone medieval old town wears a stone crown \u2014 an e-citizen capital of digital renown.", "246": "On the Gulf of Finland, white cathedral so neat \u2014 saunas in basements and an esplanade treat.", "250": "The City of Light where the Eiffel stands bright \u2014 croissants, Mona Lisa, romance day and night.", "276": "A wall once split it east from west's hold \u2014 Brandenburg Gate where Cold War tales are told.", "300": "The Acropolis high on a sacred citadel hill \u2014 where Socrates argued and gave listeners a thrill.", "348": "Two cities joined by a Danube river bridge \u2014 thermal baths warming you from every ridge.", "352": "World's most northerly capital \u2014 chilly but bright \u2014 colourful houses lit by the Northern Light.", "372": "On the Liffey river, Guinness pours black gold \u2014 Trinity College where the Book of Kells is told.", "380": "The Eternal City where empire once held sway \u2014 throw a coin in the Trevi to come back someday.", "428": "Baltic's biggest capital, Art Nouveau dressed \u2014 the Black Heads' House makes it Hanseatic-best.", "440": "Baroque buildings paint a Lithuanian town \u2014 U\u017eupis quarter wears an artist's crown.", "442": "Capital sharing its country's exact name \u2014 casemate tunnels carved underground for fame.", "470": "Built by knights as a fortress city town \u2014 limestone walls in honey colours all around.", "498": "Tree-lined avenues with a Soviet vibe still \u2014 Triumphal Arch at the city centre hill.", "499": "Where two rivers meet at the foot of a hill \u2014 rebuilt after WWII bombing's chill.", "528": "Canals like rings around a city plate \u2014 Anne Frank hid here in a 1940s state.", "807": "Mother Teresa was born in this Balkan spot \u2014 statues fill every square the city's got.", "578": "At the head of a deep blue fjord at rest \u2014 where the Nobel Peace Prize is given as best.", "616": "Rebuilt brick by brick after the war's wide flame \u2014 Chopin's heart is buried (a musical claim).", "620": "Seven hills with yellow trams climbing up high \u2014 pastel de nata custards make your eye cry.", "642": "Once called 'Little Paris of the East' \u2014 Palace of Parliament: a communist beast.", "643": "Red Square with St. Basil's onion-domed feast \u2014 Kremlin walls where tsars and presidents have leased.", "688": "White city where the Sava and Danube rivers run \u2014 Kalemegdan fortress catches the morning sun.", "703": "Castle on a rock above the Danube's gleam \u2014 three countries' borders meet near it, it would seem.", "705": "Architect Ple\u010dnik shaped this whole town's design \u2014 dragons guard the bridge where rivers entwine.", "724": "In the geographic centre of Spain, this big city sits \u2014 royal palace and tapas in their late-night fits.", "752": "Built on 14 islands joined by bridges grand \u2014 Gamla Stan old town with a royal hand.", "756": "Bears live in pits in this medieval town \u2014 Einstein worked here writing notes of renown.", "792": "Atat\u00fcrk's mausoleum stands tall and proud here \u2014 capital chosen, but not the country's biggest by year.", "804": "Golden-domed monasteries gleam at dawn \u2014 the Dnipro river flows on and on.", "826": "The Thames flows past Big Ben's tall chime \u2014 where 'mind the gap' warnings ring through time."};
+const REACT_C25 = ["Yo that was FIRE! Certified geography legend right here!", "Okay okay okay, you ATE that one up! NO crumbs left!", "Yoooo I'm shook! Both right?! Who ARE you?!", "That's it. You're getting an extra treat tonight!", "Bro I didn't even know I taught you geography! Insane!", "Both correct?! Sir or Madam, your brain is HUGE!", "Okay that's cracked. Geography main-character energy!"];
+const REACT_C10 = ["Eh, half marks. I'll allow it. Don't get cocky.", "Okay, you got SOME of it. Mid effort. B-minus.", "Half right, half wrong. The Zuzu hath spoken: meh.", "Better than nothing I guess? Try harder next time.", "Partial credit accepted. Don't push your luck.", "Mid. Just mid. We'll keep working on you."];
+const REACT_W   = ["Bro... no. Just no. That's not it at all.", "Did you guess that with your eyes closed?", "Yikes! Even I knew that. And I'm literally a dog.", "That's a SWING and a MISS, my friend.", "Buddy. Buddy. Where did you go to school?", "Wrong answer! WRONG! Try again next time, human.", "Bestie that was so wrong I felt it in my tail."];
+const REACT_IDK = ["Not even ONE guess?? Come ON, throw something out there!", "Zero attempts?! I am DISAPPOINTED in you!", "Bro just gave up. The audacity. The DRAMA.", "Couldn't even pick a random country? Wow. Just wow.", "I gave you literal HINTS. Two of them! TWO!"];
+const MS_LINES  = [null, ["Okay you actually scored points. Surprising.", "Mid effort, but you started. I see you.", "Okay okay, I'm watching now. Don't blow it."], ["Hmm okay, you might not be hopeless after all.", "Past the easy ones. Real test begins now.", "You're getting somewhere. Keep going, human."], ["Wait, you ACTUALLY know Europe? Reluctantly impressed.", "Triple-digit points. I see you flexing.", "Geography brain unlocked. Continue your journey."], ["WAIT what! You're really good at this huh?", "Okay I'm GENUINELY shook. Geography MENACE.", "Three hundred fifty points!? Should I be scared?"], ["FIVE HUNDRED?! Are you a TEACHER or something?!", "YOU. ARE. A. LEGEND. I bow to your knowledge!", "Map royalty. Geography GOD. I am unworthy."]];
+const pickRandom = arr => arr[Math.floor(Math.random()*arr.length)];
+
+
+// Zoom state
+let zk=1, zx=0, zy=0;
+
+function initMap() {
+  const wrap = document.getElementById('mwrap');
+  let W = wrap.clientWidth, H = wrap.clientHeight;
+  if (W === 0 || H === 0) {
+    requestAnimationFrame(() => setTimeout(initMap, 50));
+    return;
+  }
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const msvg  = document.getElementById('msvg');
+  msvg.innerHTML = '';
+  msvg.setAttribute('width',  W);
+  msvg.setAttribute('height', H);
+  msvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  // Scale pre-computed paths to fit current container
+  const sx = W / MAP_VW, sy = H / MAP_VH;
+  const sc = Math.min(sx, sy);
+  const tx = (W - MAP_VW * sc) / 2, ty = (H - MAP_VH * sc) / 2;
+  const baseTransform = `translate(${tx},${ty}) scale(${sc})`;
+
+  // Outer group — zoom/pan applied here
+  const outer = document.createElementNS(svgNS,'g');
+  outer.id = 'mapg';
+  outer.setAttribute('transform', baseTransform);
+  msvg.appendChild(outer);
+
+  // Graticule
+  const gpath = document.createElementNS(svgNS,'path');
+  gpath.setAttribute('d', MAP_GRAT);
+  gpath.setAttribute('fill','none');
+  gpath.setAttribute('stroke','rgba(255,255,255,0.12)');
+  gpath.setAttribute('stroke-width', 1/sc);
+  outer.appendChild(gpath);
+
+  // Shadow layer (offset copies)
+  MAP_COUNTRIES.forEach(c => {
+    const sh = document.createElementNS(svgNS,'path');
+    sh.setAttribute('d', c.d);
+    sh.setAttribute('fill','rgba(0,0,0,0.06)');
+    sh.setAttribute('stroke','none');
+    sh.setAttribute('transform','translate(1.5,1.5)');
+    outer.appendChild(sh);
+  });
+
+  // Country fills
+  MAP_COUNTRIES.forEach(c => {
+    const p = document.createElementNS(svgNS,'path');
+    p.setAttribute('d', c.d);
+    p.setAttribute('fill', G.done.has(c.id) ? '#5aac5a' : mclr(c.id));
+    p.setAttribute('stroke', 'rgba(255,255,255,0.55)');
+    p.setAttribute('stroke-width', 0.8/sc);
+    p.setAttribute('stroke-linejoin','round');
+    p.id = 'c' + c.id;
+    p.setAttribute('class', 'cp' + (G.done.has(c.id) ? ' done' : ''));
+    p.style.cursor = 'pointer';
+    p.addEventListener('click',  e => onCountryClick(e, c));
+    p.addEventListener('mousemove', e => onMouseMove(e, c));
+    p.addEventListener('mouseleave', onMouseLeave);
+    outer.appendChild(p);
+  });
+
+  // Border mesh
+  const mp = document.createElementNS(svgNS,'path');
+  mp.setAttribute('d', MAP_MESH);
+  mp.setAttribute('fill','none');
+  mp.setAttribute('stroke','rgba(255,255,255,0.4)');
+  mp.setAttribute('stroke-width', 0.7/sc);
+  outer.appendChild(mp);
+
+  // ── Zoom (wheel + buttons) ──────────────────────────────
+  let curZ = 1, curTX = tx, curTY = ty;
+
+  function applyZoom() {
+    outer.setAttribute('transform', `translate(${curTX},${curTY}) scale(${sc * curZ})`);
+    // Adjust stroke widths so borders stay thin when zoomed
+    const sw = 0.8 / (sc * curZ);
+    outer.querySelectorAll('.cp').forEach(el => el.setAttribute('stroke-width', sw));
+    mp.setAttribute('stroke-width', 0.7 / (sc * curZ));
+    gpath.setAttribute('stroke-width', 1 / (sc * curZ));
+  }
+
+  msvg.addEventListener('wheel', e => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.25 : 0.8;
+    const newZ = Math.max(1, Math.min(10, curZ * factor));
+    // Zoom toward cursor
+    const rect = msvg.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    curTX = mx - (mx - curTX) * (newZ / curZ);
+    curTY = my - (my - curTY) * (newZ / curZ);
+    curZ = newZ;
+    // Clamp pan so map doesn't go off-screen entirely
+    const maxPan = W * curZ;
+    curTX = Math.max(-maxPan, Math.min(maxPan, curTX));
+    curTY = Math.max(-maxPan, Math.min(maxPan, curTY));
+    applyZoom();
+  }, {passive:false});
+
+  function zoomBy(factor) {
+    const rect = msvg.getBoundingClientRect();
+    const cx = rect.width / 2, cy = rect.height / 2;
+    const newZ = Math.max(1, Math.min(10, curZ * factor));
+    if (newZ === curZ) return;
+    curTX = cx - (cx - curTX) * (newZ / curZ);
+    curTY = cy - (cy - curTY) * (newZ / curZ);
+    curZ = newZ;
+    applyZoom();
+  }
+  document.getElementById('zin').onclick  = () => zoomBy(1.5);
+  document.getElementById('zout').onclick = () => zoomBy(1/1.5);
+  document.getElementById('zrst').onclick = () => { curZ=1; curTX=tx; curTY=ty; applyZoom(); };
+
+  // ── Pan (mouse drag) ────────────────────────────────────
+  let dragging = false, dragX = 0, dragY = 0;
+  msvg.addEventListener('mousedown', e => { if (e.button !== 0) return; dragging=true; dragX=e.clientX-curTX; dragY=e.clientY-curTY; msvg.style.cursor='grabbing'; });
+  window.addEventListener('mouseup', () => { dragging=false; msvg.style.cursor=''; });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    curTX = e.clientX - dragX;
+    curTY = e.clientY - dragY;
+    applyZoom();
+  });
+}
+
+/* ════════════════════════════════════════
+   MAP EVENTS
+════════════════════════════════════════ */
+const tipEl = document.getElementById('tip');
+
+function onMouseMove(e, f) {
+  const id = +f.id, c = CTR[id] || CTR[f.id];
+  if (!c) return;
+  tipEl.textContent = G.done.has(id)
+    ? `${flag(c.a)} ${c.n} ✓  →  Capital: ${c.k}`
+    : '❓ Click to quiz yourself!';
+  tipEl.style.cssText = `display:block;left:${e.clientX+13}px;top:${e.clientY-32}px`;
+}
+
+function onMouseLeave() {
+  tipEl.style.display = 'none';
+}
+
+function onCountryClick(e, f) {
+  const id = +f.id, c = CTR[id] || CTR[f.id];
+  if (!c) return;
+  tipEl.style.display = 'none';
+
+  // Highlight selected country
+  document.querySelectorAll('.cp').forEach(el => el.classList.remove('lit'));
+  const hlit = document.getElementById('c' + id); if (hlit) hlit.classList.add('lit');
+
+  if (G.mode === 'study') {
+    G.cur = id;
+    openStudy(c, id);
+    return;
+  }
+
+  // QUIZ MODE — original behavior
+  if (G.done.has(id)) {
+    tipEl.textContent = `${flag(c.a)} Already conquered! ${c.n} → ${c.k}`;
+    tipEl.style.cssText = `display:block;left:${e.clientX+13}px;top:${e.clientY-32}px`;
+    setTimeout(() => tipEl.style.display = 'none', 2600);
+    return;
+  }
+
+  G.cur = id;
+  openModal(c);
+}
+
+/* ════════════════════════════════════════
+   STUDY MODE
+════════════════════════════════════════ */
+
+/* ════════════════════════════════════════
+   COUNTRY TEXT RENDERING + TTS KARAOKE
+════════════════════════════════════════ */
+function buildKaraokeHTML(text, name) {
+  // Returns { html, speakText } — html has .kw spans + bold name
+  const lowerText = text.toLowerCase();
+  const lowerName = name.toLowerCase();
+  let speakText, prefixText, bodyText;
+  if (lowerText.startsWith(lowerName)) {
+    prefixText = text.slice(0, name.length);
+    bodyText   = text.slice(name.length);
+    speakText  = text;
+  } else {
+    prefixText = name + '.';
+    bodyText   = ' ' + text;
+    speakText  = name + '. ' + text;
+  }
+  const escape = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const wrapWords = (str) => str.split(/(\s+)/).map(t =>
+    /\S/.test(t) ? `<span class="kw">${escape(t)}</span>` : t
+  ).join('');
+  const html = `<strong>${wrapWords(prefixText)}</strong>${wrapWords(bodyText)}`;
+  return { html, speakText };
+}
+
+let currentKaraokeTimer = null;
+function stopKaraoke() {
+  if (currentKaraokeTimer) { clearInterval(currentKaraokeTimer); currentKaraokeTimer = null; }
+  if (window.speechSynthesis) speechSynthesis.cancel();
+}
+
+function narratorSpeak(speakText, container) {
+  if (!window.speechSynthesis || !speakText) return;
+  speechSynthesis.cancel();
+  if (currentKaraokeTimer) { clearInterval(currentKaraokeTimer); currentKaraokeTimer = null; }
+
+  const cleanText = speakText.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
+  if (!cleanText) return;
+
+  const doSpeak = () => {
+    const utt = new SpeechSynthesisUtterance(cleanText);
+    // Funny human voice: slightly faster + perky
+    utt.rate = 1.08 + (Math.random() - 0.5) * 0.04;
+    utt.pitch = 1.05 + (Math.random() - 0.5) * 0.08;
+    utt.volume = 1.0;
+
+    // Prefer expressive natural-sounding voices
+    const voices = speechSynthesis.getVoices();
+    const prefs = [
+      /microsoft aria.*natural/i,
+      /microsoft jenny.*natural/i,
+      /microsoft ava.*natural/i,
+      /microsoft emma.*natural/i,
+      /google.+(uk|us).+(female|english)/i,
+      /samantha/i,
+      /karen|tessa|moira|fiona/i,
+      /microsoft zira/i,
+      /victoria/i,
+    ];
+    let pick = null;
+    for (const re of prefs) {
+      pick = voices.find(v => re.test(v.name) && v.lang.startsWith('en'));
+      if (pick) break;
+    }
+    if (!pick) pick = voices.find(v => v.lang.startsWith('en') && !v.default);
+    if (!pick) pick = voices.find(v => v.lang.startsWith('en'));
+    if (pick) utt.voice = pick;
+
+    // Karaoke sync
+    if (container) {
+      const words = container.querySelectorAll('.kw');
+      if (words.length) {
+        // Build char position → word index map
+        const wordPositions = [];
+        let charPos = 0;
+        cleanText.split(/(\s+)/).forEach(tok => {
+          if (/\S/.test(tok)) {
+            wordPositions.push({ start: charPos, end: charPos + tok.length });
+          }
+          charPos += tok.length;
+        });
+
+        const light = (idx) => {
+          for (let i = 0; i < words.length; i++) {
+            words[i].classList.toggle('lit', i <= idx);
+          }
+        };
+
+        let boundaryFired = false;
+        utt.onboundary = (e) => {
+          if (e.name !== 'word' && e.name !== '') return;
+          boundaryFired = true;
+          if (currentKaraokeTimer) { clearInterval(currentKaraokeTimer); currentKaraokeTimer = null; }
+          const ci = e.charIndex;
+          for (let i = 0; i < wordPositions.length; i++) {
+            if (wordPositions[i].start <= ci && ci < wordPositions[i].end + 1) {
+              light(i);
+              return;
+            }
+          }
+        };
+
+        utt.onstart = () => {
+          // Timer fallback in case boundary events don't fire
+          const msPerWord = 1000 / (2.6 * (utt.rate || 1.0));
+          let idx = 0;
+          currentKaraokeTimer = setInterval(() => {
+            if (boundaryFired) { clearInterval(currentKaraokeTimer); currentKaraokeTimer = null; return; }
+            idx++;
+            if (idx >= words.length) { clearInterval(currentKaraokeTimer); currentKaraokeTimer = null; light(words.length - 1); return; }
+            light(idx);
+          }, msPerWord);
+        };
+
+        utt.onend = () => {
+          if (currentKaraokeTimer) { clearInterval(currentKaraokeTimer); currentKaraokeTimer = null; }
+          light(words.length - 1);
+        };
+        utt.onerror = () => {
+          if (currentKaraokeTimer) { clearInterval(currentKaraokeTimer); currentKaraokeTimer = null; }
+        };
+      }
+    }
+
+    speechSynthesis.speak(utt);
+  };
+
+  if (speechSynthesis.getVoices().length === 0) {
+    speechSynthesis.onvoiceschanged = () => { doSpeak(); speechSynthesis.onvoiceschanged = null; };
+    setTimeout(doSpeak, 150);
+  } else {
+    doSpeak();
+  }
+}
+
+function openStudy(c, id) {
+  stopKaraoke();
+  const a2 = c.a.toLowerCase();
+  const longText = LONG_TEXTS[a2];
+  const shortJoke = SHORT_JOKES[a2];
+
+  const displayName = (a2 === 'gb') ? 'Great Britain' : c.n;
+
+  // Populate header
+  document.getElementById('study-flag-pop').textContent = flag(c.a);
+  document.getElementById('study-name-pop').textContent = displayName;
+  document.getElementById('study-capital-pop').innerHTML = '🏛️ <span style="opacity:.75;font-size:.85em">Capital:</span> ' + c.k;
+
+  // Reset
+  const body = document.getElementById('study-body-pop');
+  const wrap = document.getElementById('study-video-wrap-pop');
+  const vid  = document.getElementById('study-video-pop');
+  const textEl = document.getElementById('study-text-pop');
+  body.classList.remove('no-video');
+  wrap.style.display = 'none';
+  textEl.style.display = 'none';
+  textEl.classList.remove('joke-mode');
+  textEl.innerHTML = '';
+
+  // Pre-build karaoke HTML for whichever text we have
+  const displayText = longText || shortJoke;
+  const isJoke = !longText && !!shortJoke;
+  let karaoke = null;
+  if (displayText) {
+    karaoke = buildKaraokeHTML(displayText, displayName);
+    textEl.innerHTML = karaoke.html;
+  }
+
+  // Video reset
+  vid.onloadeddata = null;
+  vid.onerror = null;
+  vid.ontimeupdate = null;
+  try { vid.pause(); } catch(_) {}
+  vid.removeAttribute('src');
+  vid.load();
+
+  vid.onloadeddata = () => {
+    // Video loaded — show it, sync karaoke with video time
+    wrap.style.display = 'flex';
+    if (karaoke) {
+      textEl.style.display = 'block';
+      const words = textEl.querySelectorAll('.kw');
+      vid.ontimeupdate = () => {
+        if (!vid.duration) return;
+        const progress = vid.currentTime / vid.duration;
+        const upTo = Math.floor(progress * words.length);
+        words.forEach((w, i) => w.classList.toggle('lit', i <= upTo));
+      };
+    }
+    vid.play().catch(() => {});
+  };
+
+  vid.onerror = () => {
+    // No video — center text, narrate with TTS karaoke
+    wrap.style.display = 'none';
+    body.classList.add('no-video');
+    if (karaoke) {
+      textEl.style.display = 'block';
+      if (isJoke) textEl.classList.add('joke-mode');
+      // Small delay so the popup is visible before speech starts
+      setTimeout(() => narratorSpeak(karaoke.speakText, textEl), 350);
+    }
+  };
+
+  vid.src = `media/countries/${a2}.mp4`;
+
+  if (G.studied && !G.studied.has(id)) {
+    G.studied.add(id);
+    saveStudied();
+  }
+
+  document.getElementById('study-ov').classList.add('open');
+}
+
+function closeStudyPopup() {
+  stopKaraoke();
+  const vid = document.getElementById('study-video-pop');
+  if (vid) {
+    try { vid.pause(); } catch(_) {}
+    vid.ontimeupdate = null;
+    vid.removeAttribute('src');
+    vid.load();
+  }
+  const textEl = document.getElementById('study-text-pop');
+  if (textEl) textEl.querySelectorAll('.kw').forEach(w => w.classList.remove('lit'));
+  document.getElementById('study-ov').classList.remove('open');
+}
+
+function renderStudiedTags() { /* no UI - silent no-op */ }
+
+function saveStudied() {
+  try { localStorage.setItem('eq.studied', JSON.stringify([...G.studied])); } catch(_) {}
+}
+function loadStudied() {
+  try {
+    const raw = localStorage.getItem('eq.studied');
+    if (raw) JSON.parse(raw).forEach(id => G.studied.add(id));
+  } catch(_) {}
+}
+
+/* ════════════════════════════════════════
+   MODE SWITCHING
+════════════════════════════════════════ */
+function setMode(mode) {
+  G.mode = mode;
+  document.getElementById('mode-study').classList.toggle('active', mode === 'study');
+  document.getElementById('mode-quiz').classList.toggle('active', mode === 'quiz');
+  // Show floating restart only in quiz mode
+  const qrp = document.getElementById('quiz-restart-pill');
+  if (qrp) qrp.classList.toggle('show', mode === 'quiz');
+  // Close any open modal/video when switching
+  closeModal();
+  closeStudyPopup();
+}
+
+/* ════════════════════════════════════════
+   QUIZ MODAL
+════════════════════════════════════════ */
+function openModal(c) {
+  document.getElementById('mflag').textContent = flag(c.a);
+  document.getElementById('mprompt').textContent = 'Identify this European country!';
+  document.getElementById('ic').value = '';
+  document.getElementById('ik').value = '';
+  document.getElementById('ic').className = '';
+  document.getElementById('ik').className = '';
+  document.getElementById('rp').classList.remove('show');
+  document.getElementById('sbtn').style.display = 'block';
+  document.getElementById('sbtn').disabled = false;
+  // Reset hints
+  hintLoaded.c = false; hintLoaded.k = false;
+  ['hcbtn','hkbtn'].forEach(id => { const el=document.getElementById(id); el.disabled=false; el.style.display=''; });
+  ['hcbox','hkbox'].forEach(id => { const el=document.getElementById(id); el.classList.remove('show'); el.innerHTML=''; });
+  // Reset idk button
+  const idk = document.getElementById('idkbtn');
+  idk.disabled = false; idk.textContent = "🤷 I don't know"; idk.style.display = '';
+  // Reset pmsg class
+  document.getElementById('pmsg').className = '';
+  const zr = document.getElementById('zreact'); if (zr) zr.classList.remove('show');
+  const zc = document.getElementById('zcap'); if (zc) zc.innerHTML = '';
+  document.getElementById('ov').classList.add('open');
+  setTimeout(() => document.getElementById('ic').focus(), 80);
+}
+
+function closeModal() {
+  document.getElementById('ov').classList.remove('open');
+  document.querySelectorAll('.cp').forEach(el => el.classList.remove('lit'));
+  G.cur = null;
+}
+
+document.getElementById('ov').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('cbtn').addEventListener('click', closeModal);
+document.getElementById('sbtn').addEventListener('click', submitGuess);
+document.addEventListener('keydown', e => {
+  const ov = document.getElementById('ov');
+  if (!ov.classList.contains('open')) return;
+  if (e.key === 'Escape') { closeModal(); return; }
+  if (e.key === 'Enter') {
+    if (document.getElementById('rp').classList.contains('show')) closeModal();
+    else submitGuess();
+  }
+});
+
+/* ════════════════════════════════════════
+   SUBMIT & SCORING
+════════════════════════════════════════ */
+function submitGuess() {
+  const id = G.cur;
+  if (!id) return;
+  const c = CTR[id];
+
+  const ci = document.getElementById('ic').value.trim();
+  const ki = document.getElementById('ik').value.trim();
+
+  if (!ci && !ki) {
+    document.getElementById('ic').focus();
+    return;
+  }
+
+  const cok = ci ? isMatch(ci, c.n, c.al) : false;
+  const kok = ki ? isMatch(ki, c.k, c.al) : false;
+
+  let pts = 0;
+  if (cok && kok) { pts = 25; G.perf++; G.streak++; }
+  else if (cok || kok) { pts = 10; G.part++; G.streak++; }
+  else { G.streak = 0; }
+  if (G.streak > G.best) G.best = G.streak;
+
+  if (pts > 0) {
+    G.score += pts;
+    G.done.add(id);
+    // Mark green on map
+    const cdone = document.getElementById('c' + id);
+    if (cdone) { cdone.classList.add('done'); cdone.classList.remove('lit'); cdone.setAttribute('fill','#5aac5a'); }
+    // Float pts near modal
+    const mr = document.getElementById('mdl').getBoundingClientRect();
+    showFloatingPts(pts, mr.left + mr.width / 2 - 30, mr.top + 110);
+    updateDoneList();
+  }
+
+  updateUI();
+
+  // Colour inputs
+  if (ci) document.getElementById('ic').className = cok ? 'ok' : 'no';
+  if (ki) document.getElementById('ik').className = kok ? 'ok' : 'no';
+
+  // Result rows
+  const rcrow = document.getElementById('rcrow');
+  const rkrow = document.getElementById('rkrow');
+  if (ci) {
+    rcrow.style.display = 'flex';
+    document.getElementById('rci').textContent = cok ? '✅' : '❌';
+    const rcl = document.getElementById('rcl');
+    rcl.textContent = `Country: ${cok ? 'Correct!' : 'Wrong'}`;
+    rcl.className = 'rrlb ' + (cok ? 'ok' : 'no');
+    document.getElementById('rca').textContent = cok ? '' : `→ ${c.n}`;
+  } else { rcrow.style.display = 'none'; }
+
+  if (ki) {
+    rkrow.style.display = 'flex';
+    document.getElementById('rki').textContent = kok ? '✅' : '❌';
+    const rkl = document.getElementById('rkl');
+    rkl.textContent = `Capital: ${kok ? 'Correct!' : 'Wrong'}`;
+    rkl.className = 'rrlb ' + (kok ? 'ok' : 'no');
+    document.getElementById('rka').textContent = kok ? '' : `→ ${c.k}`;
+  } else { rkrow.style.display = 'none'; }
+
+  // Points display
+  const pn = document.getElementById('pnum'), pm = document.getElementById('pmsg');
+  if (pts === 25) {
+    pn.textContent = '+25'; pn.style.color = '#d4a017';
+    pm.textContent = '🌟 Perfect! Both correct!';
+  } else if (pts === 10) {
+    pn.textContent = '+10'; pn.style.color = '#d07020';
+    pm.textContent = '👍 Partial credit!';
+  } else {
+    pn.textContent = '+0'; pn.style.color = '#e74c3c';
+    pm.textContent = `😅 Answer: ${c.n} → ${c.k}`;
+  }
+
+  document.getElementById('rp').classList.add('show');
+  document.getElementById('sbtn').style.display = 'none';
+  document.getElementById('idkbtn').style.display = 'none';
+  document.getElementById('hcbtn').style.display = 'none';
+  document.getElementById('hkbtn').style.display = 'none';
+
+  // Fire Zuzu reaction
+  fireZuzuReaction(pts > 0 ? 'correct' : 'wrong', pts, c);
+
+  // Win check
+  if (G.done.size >= TOTAL) {
+    setTimeout(() => {
+      document.getElementById('winmsg').textContent =
+        `Amazing! You scored ${G.score} points, got ${G.perf} perfect answers, and Zuzu cleared every obstacle! 🏆`;
+      document.getElementById('winov').classList.add('open');
+    }, 700);
+  }
+}
+
+document.getElementById('hcbtn').addEventListener('click', () => showHint('c'));
+document.getElementById('hkbtn').addEventListener('click', () => showHint('k'));
+document.getElementById('idkbtn').addEventListener('click', iDontKnow);
+
+/* ════════════════════════════════════════
+   HINTS  (Claude API — funny rhymes)
+════════════════════════════════════════ */
+const hintLoaded = { c: false, k: false };
+
+function showHint(type) {
+  const id = G.cur; if (!id) return;
+  if (hintLoaded[type]) return;
+  const btn = document.getElementById(type === 'c' ? 'hcbtn' : 'hkbtn');
+  const box = document.getElementById(type === 'c' ? 'hcbox' : 'hkbox');
+  const dict = type === 'c' ? HINT_C : HINT_K;
+  const text = dict[id] || '(no hint available — give it your best guess!)';
+  btn.disabled = true;
+  box.innerHTML = '🎵 <em>' + text + '</em>';
+  box.classList.add('show');
+  hintLoaded[type] = true;
+}
+
+/* ════════════════════════════════════════
+   I DON'T KNOW  (Claude API — funny reveal)
+════════════════════════════════════════ */
+function iDontKnow() {
+  const id = G.cur; if (!id) return;
+  const c = CTR[id];
+  const reveals = [
+    `😲 GASP! It was <strong>${c.n}</strong> ${flag(c.a)} all along — capital <strong>${c.k}</strong>! Even I was almost stumped!`,
+    `🐕 Plot twist! The mystery country was <strong>${c.n}</strong> ${flag(c.a)} with its capital <strong>${c.k}</strong>. Better luck next time, human!`,
+    `🎬 DUN-DUN-DUN! It's <strong>${c.n}</strong> ${flag(c.a)}, capital <strong>${c.k}</strong>! Now you know — go forth and conquer!`,
+    `📍 Drumroll please... <strong>${c.n}</strong> ${flag(c.a)} with capital <strong>${c.k}</strong>! Keep learning, you got this!`,
+    `🎉 The answer was <strong>${c.n}</strong> ${flag(c.a)} (capital: <strong>${c.k}</strong>)! No shame — geography is HARD!`,
+  ];
+  showIdkResult(pickRandom(reveals), c);
+}
+
+function showIdkResult(revealText, c) {
+  // Colour both inputs red
+  document.getElementById('ic').className = 'no';
+  document.getElementById('ik').className = 'no';
+
+  // Country row — show the answer
+  document.getElementById('rcrow').style.display = 'flex';
+  document.getElementById('rci').textContent = '📖';
+  const rcl = document.getElementById('rcl');
+  rcl.textContent = `Country: ${c.n} ${flag(c.a)}`;
+  rcl.className = 'rrlb'; rcl.style.color = '#7a4e2a';
+  document.getElementById('rca').textContent = '';
+
+  // Capital row — show the answer
+  document.getElementById('rkrow').style.display = 'flex';
+  document.getElementById('rki').textContent = '📖';
+  const rkl = document.getElementById('rkl');
+  rkl.textContent = `Capital: ${c.k}`;
+  rkl.className = 'rrlb'; rkl.style.color = '#7a4e2a';
+  document.getElementById('rka').textContent = '';
+
+  // Points display
+  const pn = document.getElementById('pnum');
+  const pm = document.getElementById('pmsg');
+  pn.textContent = '+0'; pn.style.color = '#aaa';
+  pm.innerHTML  = revealText;
+  pm.className  = 'idk';
+
+  document.getElementById('rp').classList.add('show');
+  document.getElementById('sbtn').style.display = 'none';
+  document.getElementById('idkbtn').style.display = 'none';
+  document.getElementById('hcbtn').style.display = 'none';
+  document.getElementById('hkbtn').style.display = 'none';
+
+  // Fire Zuzu IDK reaction
+  fireZuzuReaction('idk', 0, c);
+}
+
+/* ════════════════════════════════════════
+   SIDEBAR MILESTONE VIDEOS
+════════════════════════════════════════ */
+function initSidebarIdle() { /* removed */ }
+
+let sidebarVideoTimer = null;
+
+function triggerSidebarVideo() { /* removed */ }
+
+function renderSidebarCaption(text, container) {
+  container.innerHTML = '';
+  const words = text.split(' ');
+  words.forEach((word, i) => {
+    const span = document.createElement('span');
+    span.className = 'zcap-badge';
+    span.textContent = word;
+    span.style.animationDelay = (i * 0.11) + 's';
+    container.appendChild(span);
+    if (i < words.length - 1) container.appendChild(document.createTextNode(' '));
+  });
+}
+
+/* ════════════════════════════════════════
+   ZUZU REACTION ENGINE (Claude API)
+════════════════════════════════════════ */
+async function fireZuzuReaction() { /* removed */ }
+
+function renderZuzuCaption(text, type, container) {
+  container.innerHTML = '';
+  const badgeClass = (type === 'correct') ? 'zcap-badge' : 'zcap-badge bad';
+  const words = text.split(' ');
+  words.forEach((word, i) => {
+    const span = document.createElement('span');
+    span.className = badgeClass;
+    span.textContent = word;
+    span.style.animationDelay = (i * 0.11) + 's';
+    container.appendChild(span);
+    if (i < words.length - 1) container.appendChild(document.createTextNode(' '));
+  });
+}
+
+
+function makeZuzuSVG() {
+  return `<svg viewBox="0 0 340 460" xmlns="http://www.w3.org/2000/svg" class="zuzu-svg">
+    <defs>
+      <radialGradient id="furGrad" cx="50%" cy="35%" r="70%">
+        <stop offset="0%" stop-color="#9a6a45"/>
+        <stop offset="40%" stop-color="#7a4f30"/>
+        <stop offset="100%" stop-color="#4a2d18"/>
+      </radialGradient>
+      <radialGradient id="muzzleGrad" cx="50%" cy="50%" r="65%">
+        <stop offset="0%" stop-color="#e8cca0"/>
+        <stop offset="80%" stop-color="#b8956a"/>
+      </radialGradient>
+      <radialGradient id="earGrad" cx="50%" cy="20%" r="85%">
+        <stop offset="0%" stop-color="#5a3820"/>
+        <stop offset="100%" stop-color="#2d1808"/>
+      </radialGradient>
+      <linearGradient id="toiletGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="100%" stop-color="#d8e2e8"/>
+      </linearGradient>
+      <linearGradient id="paperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#f5e8d0"/>
+        <stop offset="100%" stop-color="#e0d2b0"/>
+      </linearGradient>
+      <linearGradient id="wallGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#a8c8d8"/>
+        <stop offset="100%" stop-color="#6a98ad"/>
+      </linearGradient>
+      <filter id="furBlur" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur stdDeviation="2"/>
+      </filter>
+    </defs>
+
+    <!-- ═══ BATHROOM BACKGROUND ═══ -->
+    <rect width="340" height="460" fill="url(#wallGrad)"/>
+    <!-- Tile grout lines -->
+    <g stroke="#4a7088" stroke-width="0.5" opacity="0.4">
+      <line x1="0" y1="120" x2="340" y2="120"/>
+      <line x1="0" y1="240" x2="340" y2="240"/>
+      <line x1="80" y1="0" x2="80" y2="240"/>
+      <line x1="170" y1="0" x2="170" y2="240"/>
+      <line x1="260" y1="0" x2="260" y2="240"/>
+    </g>
+    <!-- Window in background (left) -->
+    <rect x="15" y="25" width="55" height="75" fill="#d4e8f0" stroke="#4a6878" stroke-width="2"/>
+    <line x1="42" y1="25" x2="42" y2="100" stroke="#4a6878" stroke-width="1.5"/>
+    <line x1="15" y1="62" x2="70" y2="62" stroke="#4a6878" stroke-width="1.5"/>
+    <!-- Toilet paper holder (right) -->
+    <rect x="290" y="240" width="14" height="50" fill="#c8b89a"/>
+    <ellipse cx="297" cy="290" rx="22" ry="20" fill="#fff"/>
+    <ellipse cx="297" cy="290" rx="6" ry="6" fill="#a8a8a8"/>
+    <path d="M 297 310 Q 305 330 302 360" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round"/>
+
+    <!-- ═══ TOILET ═══ -->
+    <!-- Tank (behind) -->
+    <rect x="80" y="180" width="180" height="100" rx="8" fill="url(#toiletGrad)" stroke="#a0b0bc" stroke-width="1.5"/>
+    <rect x="195" y="195" width="22" height="8" rx="2" fill="#c0d0d8"/>
+    <!-- Bowl (under dog) -->
+    <ellipse cx="170" cy="340" rx="100" ry="50" fill="url(#toiletGrad)" stroke="#a0b0bc" stroke-width="1.5"/>
+    <ellipse cx="170" cy="335" rx="85" ry="38" fill="#c8d4dc" opacity="0.5"/>
+    <!-- Base/foot of toilet -->
+    <path d="M 110 380 Q 95 420 105 440 L 235 440 Q 245 420 230 380 Z" fill="url(#toiletGrad)" stroke="#a0b0bc" stroke-width="1.5"/>
+
+    <!-- ═══ DOG BODY (sitting) ═══ -->
+    <!-- Rear/hindquarters -->
+    <ellipse cx="170" cy="335" rx="78" ry="38" fill="url(#furGrad)"/>
+    <!-- Hind legs (fluffy paws on either side) -->
+    <ellipse cx="115" cy="375" rx="22" ry="18" fill="#5a3820"/>
+    <ellipse cx="225" cy="375" rx="22" ry="18" fill="#5a3820"/>
+    <ellipse cx="115" cy="385" rx="20" ry="12" fill="#b8956a"/>
+    <ellipse cx="225" cy="385" rx="20" ry="12" fill="#b8956a"/>
+    <!-- Toe details -->
+    <ellipse cx="105" cy="390" rx="3" ry="4" fill="#5a3820"/>
+    <ellipse cx="115" cy="392" rx="3" ry="4" fill="#5a3820"/>
+    <ellipse cx="125" cy="390" rx="3" ry="4" fill="#5a3820"/>
+    <ellipse cx="215" cy="390" rx="3" ry="4" fill="#5a3820"/>
+    <ellipse cx="225" cy="392" rx="3" ry="4" fill="#5a3820"/>
+    <ellipse cx="235" cy="390" rx="3" ry="4" fill="#5a3820"/>
+
+    <!-- Torso/chest (fluffy) -->
+    <ellipse cx="170" cy="280" rx="60" ry="55" fill="url(#furGrad)"/>
+    <!-- White chest patch -->
+    <ellipse cx="170" cy="295" rx="28" ry="32" fill="#f0dcc0" opacity="0.85"/>
+    <ellipse cx="170" cy="305" rx="20" ry="22" fill="#f8e8cc"/>
+    <!-- Fluffy fur tufts on body -->
+    <circle cx="120" cy="275" r="14" fill="#6b4225" opacity="0.7" filter="url(#furBlur)"/>
+    <circle cx="220" cy="275" r="14" fill="#6b4225" opacity="0.7" filter="url(#furBlur)"/>
+    <circle cx="135" cy="320" r="10" fill="#8a5a35" opacity="0.55" filter="url(#furBlur)"/>
+    <circle cx="205" cy="320" r="10" fill="#8a5a35" opacity="0.55" filter="url(#furBlur)"/>
+
+    <!-- ═══ NEWSPAPER (held by paws) ═══ -->
+    <g class="zuzu-newspaper" transform="translate(170, 280)">
+      <!-- Back side -->
+      <path d="M -55 -10 L 55 -10 L 60 50 L -60 50 Z" fill="url(#paperGrad)" stroke="#8a7858" stroke-width="1"/>
+      <!-- Fold line in middle -->
+      <line x1="0" y1="-10" x2="0" y2="50" stroke="#8a7858" stroke-width="0.8" opacity="0.6"/>
+      <!-- Newspaper header -->
+      <text x="0" y="5" font-family="serif" font-size="9" font-weight="bold" text-anchor="middle" fill="#3a2818">BARK TIMES</text>
+      <line x1="-50" y1="10" x2="50" y2="10" stroke="#3a2818" stroke-width="0.5"/>
+      <!-- Article lines -->
+      <line x1="-50" y1="18" x2="-5" y2="18" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="-50" y1="22" x2="-5" y2="22" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="-50" y1="26" x2="-8" y2="26" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="-50" y1="30" x2="-5" y2="30" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="-50" y1="34" x2="-12" y2="34" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="-50" y1="38" x2="-5" y2="38" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="-50" y1="42" x2="-8" y2="42" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="5" y1="18" x2="50" y2="18" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="5" y1="22" x2="50" y2="22" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="5" y1="26" x2="48" y2="26" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="5" y1="30" x2="50" y2="30" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="5" y1="34" x2="42" y2="34" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="5" y1="38" x2="50" y2="38" stroke="#5a4838" stroke-width="0.5"/>
+      <line x1="5" y1="42" x2="48" y2="42" stroke="#5a4838" stroke-width="0.5"/>
+    </g>
+    <!-- Front paws holding newspaper -->
+    <ellipse cx="108" cy="282" rx="18" ry="14" fill="#5a3820"/>
+    <ellipse cx="232" cy="282" rx="18" ry="14" fill="#5a3820"/>
+    <ellipse cx="108" cy="290" rx="14" ry="9" fill="#b8956a"/>
+    <ellipse cx="232" cy="290" rx="14" ry="9" fill="#b8956a"/>
+
+    <!-- ═══ EARS (behind head, drape past shoulders) ═══ -->
+    <g class="zuzu-ears">
+      <path d="M 95 130 Q 70 165 65 215 Q 70 250 90 268 Q 105 280 118 270 Q 122 260 117 245 Q 124 220 116 200 Q 120 175 110 155 Q 113 135 102 125 Q 95 122 95 130 Z"
+            fill="url(#earGrad)"/>
+      <path d="M 245 130 Q 270 165 275 215 Q 270 250 250 268 Q 235 280 222 270 Q 218 260 223 245 Q 216 220 224 200 Q 220 175 230 155 Q 227 135 238 125 Q 245 122 245 130 Z"
+            fill="url(#earGrad)"/>
+    </g>
+
+    <!-- ═══ HEAD ═══ -->
+    <g class="zuzu-head">
+      <path d="M 170 60
+               Q 130 60 110 75
+               Q 88 92 82 120
+               Q 76 145 80 165
+               Q 78 188 90 208
+               Q 96 228 115 240
+               Q 140 256 170 258
+               Q 200 256 225 240
+               Q 244 228 250 208
+               Q 262 188 260 165
+               Q 264 145 258 120
+               Q 252 92 230 75
+               Q 210 60 170 60 Z"
+            fill="url(#furGrad)"/>
+      <!-- Top fluff tufts -->
+      <path d="M 118 80 Q 110 60 124 56 Q 134 62 130 80 Z" fill="#6b4225" filter="url(#furBlur)"/>
+      <path d="M 144 65 Q 138 48 156 45 Q 167 53 160 70 Z" fill="#5a3820" filter="url(#furBlur)"/>
+      <path d="M 170 58 Q 170 40 186 40 Q 198 48 190 65 Z" fill="#5a3820" filter="url(#furBlur)"/>
+      <path d="M 198 65 Q 202 48 216 50 Q 224 60 215 72 Z" fill="#5a3820" filter="url(#furBlur)"/>
+      <path d="M 222 80 Q 230 60 244 68 Q 248 80 240 86 Z" fill="#6b4225" filter="url(#furBlur)"/>
+      <!-- Side cheek shadows -->
+      <ellipse cx="100" cy="170" rx="20" ry="35" fill="#5a3820" opacity="0.4"/>
+      <ellipse cx="240" cy="170" rx="20" ry="35" fill="#5a3820" opacity="0.4"/>
+    </g>
+
+    <!-- ═══ MUZZLE ═══ -->
+    <g class="zuzu-muzzle">
+      <path d="M 118 170
+               Q 105 187 107 215
+               Q 110 240 125 252
+               Q 145 264 170 264
+               Q 195 264 215 252
+               Q 230 240 233 215
+               Q 235 187 222 170
+               Q 205 158 170 158
+               Q 135 158 118 170 Z"
+            fill="url(#muzzleGrad)"/>
+    </g>
+
+    <!-- ═══ EYES ═══ -->
+    <g class="zuzu-eyes">
+      <ellipse class="zw zw-l" cx="138" cy="162" rx="11" ry="9" fill="#fff" opacity="0.95"/>
+      <ellipse class="zw zw-r" cx="202" cy="162" rx="11" ry="9" fill="#fff" opacity="0.95"/>
+      <g class="zuzu-pupils">
+        <circle class="zp zp-l" cx="138" cy="163" r="7" fill="#1a0a04"/>
+        <circle class="zp zp-r" cx="202" cy="163" r="7" fill="#1a0a04"/>
+        <circle class="zs zs-l" cx="140" cy="161" r="2" fill="#fff"/>
+        <circle class="zs zs-r" cx="204" cy="161" r="2" fill="#fff"/>
+        <circle class="zs2 zs2-l" cx="135" cy="164" r="1.2" fill="#fff" opacity="0.7"/>
+        <circle class="zs2 zs2-r" cx="199" cy="164" r="1.2" fill="#fff" opacity="0.7"/>
+      </g>
+      <!-- Fringe overhanging eyes -->
+      <path d="M 120 150 Q 138 146 156 154 Q 150 160 138 158 Q 126 156 120 150 Z" fill="#5a3820"/>
+      <path d="M 184 154 Q 202 146 220 150 Q 214 156 202 158 Q 190 160 184 154 Z" fill="#5a3820"/>
+      <!-- Eyebrows -->
+      <path class="zb zb-l" d="M 122 142 Q 138 137 152 144" stroke="#1a0a04" stroke-width="3" fill="none" stroke-linecap="round" opacity="0"/>
+      <path class="zb zb-r" d="M 188 144 Q 202 137 218 142" stroke="#1a0a04" stroke-width="3" fill="none" stroke-linecap="round" opacity="0"/>
+    </g>
+
+    <!-- ═══ GLASSES ═══ -->
+    <g class="zuzu-glasses">
+      <!-- Left lens -->
+      <circle cx="138" cy="163" r="17" fill="#a8c8d8" fill-opacity="0.18" stroke="#1a0a04" stroke-width="2.5"/>
+      <!-- Right lens -->
+      <circle cx="202" cy="163" r="17" fill="#a8c8d8" fill-opacity="0.18" stroke="#1a0a04" stroke-width="2.5"/>
+      <!-- Bridge -->
+      <path d="M 155 163 Q 170 158 185 163" stroke="#1a0a04" stroke-width="2.5" fill="none"/>
+      <!-- Glasses shine highlights -->
+      <ellipse cx="132" cy="158" rx="4" ry="2" fill="#fff" opacity="0.5"/>
+      <ellipse cx="196" cy="158" rx="4" ry="2" fill="#fff" opacity="0.5"/>
+    </g>
+
+    <!-- ═══ NOSE ═══ -->
+    <g class="zuzu-nose">
+      <ellipse cx="170" cy="208" rx="17" ry="12" fill="#3a2010"/>
+      <ellipse cx="170" cy="206" rx="14" ry="9" fill="#5a3520"/>
+      <ellipse cx="164" cy="208" rx="2.5" ry="3.5" fill="#1a0a04"/>
+      <ellipse cx="176" cy="208" rx="2.5" ry="3.5" fill="#1a0a04"/>
+      <ellipse cx="168" cy="200" rx="5" ry="2" fill="#a87852" opacity="0.6"/>
+    </g>
+
+    <!-- ═══ MOUTH ═══ -->
+    <g class="zuzu-mouth">
+      <line x1="170" y1="220" x2="170" y2="232" stroke="#2d1808" stroke-width="1.8" stroke-linecap="round"/>
+      <path class="zm-idle" d="M 154 236 Q 170 244 186 236" stroke="#2d1808" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path class="zm-happy" d="M 150 234 Q 170 256 190 234 Q 180 248 170 248 Q 160 248 150 234 Z" fill="#2d1808" opacity="0"/>
+      <path class="zm-tongue" d="M 158 244 Q 170 254 182 244 Q 176 250 170 250 Q 164 250 158 244 Z" fill="#ff6b8a" opacity="0"/>
+      <ellipse class="zm-shook" cx="170" cy="240" rx="7" ry="9" fill="#2d1808" opacity="0"/>
+      <path class="zm-smirk" d="M 154 240 Q 170 234 186 242" stroke="#2d1808" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0"/>
+    </g>
+
+    <!-- ═══ BEARD ═══ -->
+    <g class="zuzu-beard">
+      <path d="M 130 250 Q 126 270 140 272 Q 148 264 144 252 Z" fill="#b8956a" opacity="0.85"/>
+      <path d="M 150 255 Q 146 280 162 282 Q 172 274 165 256 Z" fill="#d4b896" opacity="0.9"/>
+      <path d="M 178 256 Q 172 274 184 282 Q 200 280 196 255 Z" fill="#d4b896" opacity="0.9"/>
+      <path d="M 200 252 Q 196 268 208 272 Q 218 270 215 250 Z" fill="#b8956a" opacity="0.85"/>
+    </g>
+
+    <!-- Blush (happy only) -->
+    <ellipse class="zuzu-blush" cx="115" cy="200" rx="10" ry="7" fill="#d97757" opacity="0"/>
+    <ellipse class="zuzu-blush" cx="225" cy="200" rx="10" ry="7" fill="#d97757" opacity="0"/>
+  </svg>`;
+}
+
+function setZuzuMood(container, mood) {
+  if (!container) return;
+  container.className = 'zuzu-container ' + mood;
+}
+function ensureZuzuRendered(container) {
+  if (container && !container.querySelector('svg')) {
+    container.innerHTML = makeZuzuSVG();
+  }
+}
+function startZuzuTalking(container) {
+  if (!container) return;
+  container.classList.add('talking');
+}
+function stopZuzuTalking(container) {
+  if (!container) return;
+  container.classList.remove('talking');
+}
+
+function zuzuSpeak(text, opts) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+
+  // Strip emojis for cleaner speech
+  const cleanText = text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').trim();
+  if (!cleanText) return;
+
+  // Wait for voices to be loaded (chrome async loads)
+  const speak = () => {
+    const utt = new SpeechSynthesisUtterance(cleanText);
+    const opt = opts || {};
+
+    // Mood-based parameters — LOW pitch + SLOW rate = raspy dog growl voice
+    const moodParams = {
+      happy:  { rate: 0.95, pitch: 0.45 },
+      shook:  { rate: 1.05, pitch: 0.55 },
+      sass:   { rate: 0.82, pitch: 0.30 },
+      angry:  { rate: 0.85, pitch: 0.15 },
+      mid:    { rate: 0.88, pitch: 0.35 },
+      idle:   { rate: 0.92, pitch: 0.40 },
+    };
+    const p = moodParams[opt.mood] || moodParams.idle;
+    utt.rate = p.rate + (Math.random() - 0.5) * 0.05;
+    utt.pitch = Math.max(0, p.pitch + (Math.random() - 0.5) * 0.08);
+    utt.volume = 1.0;
+
+    // Voice selection — prefer DEEP MALE voices for raspy dog growl
+    const voices = window.speechSynthesis.getVoices();
+    const preferredNames = [
+      /microsoft guy.*natural/i,                // Edge neural — deep male
+      /microsoft davis.*natural/i,              // Edge neural — deep male
+      /microsoft brian.*natural/i,              // Edge neural — male
+      /microsoft ryan.*natural/i,               // Edge neural — male UK
+      /microsoft william.*natural/i,            // Edge neural — male AU
+      /microsoft david/i,                       // Windows male
+      /microsoft mark/i,                        // Windows male
+      /microsoft george/i,                      // Windows male UK
+      /microsoft james/i,                       // Windows male AU
+      /google.+(uk|us).+english.+male/i,        // Chrome male
+      /google uk english male/i,
+      /google us english male/i,
+      /alex/i,                                  // macOS premium male
+      /daniel/i,                                // macOS male UK
+      /fred|ralph|jorge|reed|rocko/i,           // macOS character voices (raspy/deep)
+      /aaron/i,                                 // macOS male
+    ];
+    let pick = null;
+    for (const re of preferredNames) {
+      pick = voices.find(v => re.test(v.name) && v.lang.startsWith('en'));
+      if (pick) break;
+    }
+    // Fallback: any male-sounding English voice
+    if (!pick) pick = voices.find(v => v.lang.startsWith('en') && /male/i.test(v.name) && !/female/i.test(v.name));
+    if (!pick) pick = voices.find(v => v.lang.startsWith('en') && !v.default);
+    if (!pick) pick = voices.find(v => v.lang.startsWith('en'));
+    if (pick) utt.voice = pick;
+
+    // Talking-mouth animation hooks
+    if (opt.container) {
+      startZuzuTalking(opt.container);
+      utt.onend = () => stopZuzuTalking(opt.container);
+      utt.onerror = () => stopZuzuTalking(opt.container);
+    }
+
+    window.speechSynthesis.speak(utt);
+  };
+
+  // Voices may not be loaded yet
+  if (window.speechSynthesis.getVoices().length === 0) {
+    window.speechSynthesis.onvoiceschanged = () => { speak(); window.speechSynthesis.onvoiceschanged = null; };
+    // Trigger load
+    setTimeout(speak, 120);
+  } else {
+    speak();
+  }
+}
+
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  loadStudied();
+  updateUI();
+  initSidebarIdle();
+  // Mode toggle
+  document.getElementById('mode-study').addEventListener('click', () => setMode('study'));
+  document.getElementById('mode-quiz').addEventListener('click', () => setMode('quiz'));
+  // Study popup close handlers
+  const closeBtn = document.getElementById('study-close');
+  if (closeBtn) closeBtn.addEventListener('click', closeStudyPopup);
+  const studyOv = document.getElementById('study-ov');
+  if (studyOv) studyOv.addEventListener('click', (e) => {
+    if (e.target.id === 'study-ov') closeStudyPopup();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('study-ov').classList.contains('open')) {
+      closeStudyPopup();
+    }
+  });
+  // Floating quiz restart pill
+  const qrp = document.getElementById('quiz-restart-pill');
+  if (qrp) qrp.addEventListener('click', () => {
+    if (confirm('Restart quiz? Your progress will be reset.')) location.reload();
+  });
+});
+
+// Debounced resize handler
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(initMap, 260);
+});
+</script>
+</body>
+</html>
